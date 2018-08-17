@@ -1,0 +1,43 @@
+//
+//  chipKIT WiFire Rev.C.xcconfig
+//  Board configuration file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by  Rei Vilo on Apr 09, 2015
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence     All rights reserved
+//
+// Last update: Feb 14, 2017 release 9.1.4
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = chipkit_WiFire
+// Revisions C and later with FPU
+BOARD_TAG1 = chipkit_WiFire.menu.Version.cplus
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/tty.usbserial*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = __32MZ2048ECG100__ MPIDE CHIPKIT
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/Mpide.app/Contents/Resources/Java/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+//
+MAX_RAM_SIZE = 524288
+
+CONFIG_NAME = chipKIT WiFire Rev.C

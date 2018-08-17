@@ -1,0 +1,44 @@
+//
+//  Robotis OpenCM9.04.xcconfig
+//  Board config file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by 	Rei Vilo on Sep 15, 2014
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence		All rights reserved
+//
+// Last update: Sep 20, 2014 release 1.7.7
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = cm904
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/tty.usbmodem*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = STM32F103CB ARDUINO
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/ROBOTIS_OpenCM.app/Contents/Resources/Java/** $(SKETCHBOOK_DIR)/Libraries/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+// given by <tag>.upload.maximum_data_size in boards.txt for Arduino 1.5.x
+//
+//MAX_RAM_SIZE = 2048
+
+RESET_MESSAGE = 1
+
+CONFIG_NAME = Robotis OpenCM9.04

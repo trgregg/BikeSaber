@@ -1,0 +1,46 @@
+//
+//  LaunchPad CC1310 EMT.xcconfig
+//  Board config file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by  Rei Vilo on Jul 01, 2014
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence		All rights reserved
+//
+// Last update: Feb 16, 2018 release 9.2.6
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG_18  = LAUNCHXL_CC1310
+BOARD_TAG     = 0
+
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/cu.usbmodemL*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = __CC1310__ ENERGIA ENERGIA_MT
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/Energia.app/Contents/Resources/Java/hardware/cc3200/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+// given by <tag>.upload.maximum_data_size in boards.txt for Arduino 1.5.x
+//
+// MAX_RAM_SIZE = 8192
+MAX_RAM_SIZE = 20480
+MAX_FLASH_SIZE = 262144
+
+CONFIG_NAME = LaunchPad CC1310 EMT

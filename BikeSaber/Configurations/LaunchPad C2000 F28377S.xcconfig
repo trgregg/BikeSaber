@@ -1,0 +1,44 @@
+//
+//  LaunchPad C2000 with F28377S.xcconfig 
+//  Board config file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by 	Rei Vilo on Nov 10, 2015
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  License		All rights reserved
+//
+// Last update: Jan 16, 2017 release 6.0.7
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = lptms320f28377s
+BOARD_TAG_18  = lptms320f28377s
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/cu.usbserial-TI*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = __TMS320F28377S__ ENERGIA
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = $(ENERGIA_APP)/** $(SKETCHBOOK_DIR)/Libraries/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+// given by <tag>.upload.maximum_data_size in boards.txt for Arduino 1.5.x
+//
+MAX_RAM_SIZE = 1048576
+MAX_FLASH_SIZE = 167936
+
+CONFIG_NAME = LaunchPad C2000 F28377S

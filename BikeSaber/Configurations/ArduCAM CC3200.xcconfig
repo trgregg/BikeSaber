@@ -1,0 +1,45 @@
+//
+//  ArduCAM CC3200.xcconfig
+//  Board config file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by  Rei Vilo on Apr 28, 2016
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence		All rights reserved
+//
+// Last update: Apr 28, 2016 release 4.5.2
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = ArduCAM3200
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/cu.usbserial-cc3200*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = __CC3200R1M1RGC__ ENERGIA ARDUCAM
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/Energia.app/Contents/Resources/Java/hardware/cc3200/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+// given by <tag>.upload.maximum_data_size in boards.txt for Arduino 1.5.x
+//
+MAX_RAM_SIZE = 32768
+MAX_FLASH_SIZE = 262144
+
+WARNING_MESSAGE = Support for $(CONFIG_NAME) is put on hold.
+
+CONFIG_NAME = ArduCAM CC3200

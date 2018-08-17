@@ -1,0 +1,46 @@
+//
+//  Intel Edison.xcconfig
+//  Board config file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by 	Rei Vilo on Mar 21, 2016
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence		All rights reserved
+//
+// Last update: Mar 21, 2016 release 4.4.1
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = arduino_101
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/cu.usbmodem*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = arc32 ARDUINO CURIE_IDE
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/IntelArduino.app/Contents/Resources/Java/** /Applications/Arduino.app/Contents/Resources/Java/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+// given by <tag>.upload.maximum_data_size in boards.txt for Arduino 1.5.x
+//
+MAX_RAM_SIZE = 196608
+
+//RESET_MESSAGE = 1
+
+WARNING_MESSAGE = $(CONFIG_NAME) no longer supported by Intel
+
+CONFIG_NAME = Intel Curie 101

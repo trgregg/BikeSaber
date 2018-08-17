@@ -1,0 +1,45 @@
+//
+//  LaunchPad MSP432P401 Red EMT.xcconfig
+//  Board configuration file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by  Rei Vilo on Oct 24, 2012
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence     All rights reserved
+//
+// Last update: Mar 14, 2018 release 9.2.5
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = MSP-EXP432P401RR
+BOARD_TAG_18 = MSP-EXP432P401RR
+MSP432_COLOUR = RED_ONLY
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/tty.usbmodem*
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = __MSP432P401R__ ENERGIA ENERGIA_MT
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/Energia.app/Contents/Resources/Java/hardware/msp432/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+//
+MAX_RAM_SIZE = 65536
+
+MULTI_INO    = 1
+
+CONFIG_NAME = LaunchPad MSP432P401 Red EMT

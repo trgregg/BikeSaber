@@ -1,0 +1,43 @@
+//
+//  MediaTek LinkIt 7697.xcconfig
+//  Board configuration file
+//  ----------------------------------
+//  Developed with embedXcode
+//
+//  Part of embedXcode
+//  Embedded Computing on Xcode
+//
+//  Created by  Rei Vilo on Aug 18, 2017
+//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Licence     All rights reserved
+//
+// Last update: Sep 04, 2017 release 8.0.1
+
+// Board identifier
+// See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
+//
+BOARD_TAG  = linkit_7697
+
+// Port (optionnal)
+// most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
+//
+BOARD_PORT = /dev/tty.SLAB_USBtoUART
+
+// References for Xcode code-sense
+// See Boards.txt for <tag>.build.mcu=<GCC_PREPROCESSOR_DEFINITIONS>
+//
+GCC_PREPROCESSOR_DEFINITIONS = ARDUINO_linkit_7697 LINKIT ARDUINO
+
+// Specify the full path and name of the application
+// with /Contents/Resources/Java/** after
+//
+HEADER_SEARCH_PATHS = /Applications/LinkIt.app/Contents/Java/**
+
+// Maximum RAM size in bytes
+// given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy
+//
+// Executable Size RAM (Code+RO+RW+ZI+Heap)	= 2MB
+//
+MAX_RAM_SIZE = 2097152
+
+CONFIG_NAME = MediaTek LinkIt 7697
