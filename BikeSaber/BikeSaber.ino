@@ -520,39 +520,42 @@ void loop() {
         char buffer[255];
         uint8_t packet[RH_RF69_MAX_MESSAGE_LEN];
         int lastRssi = -100;
-        uint8_t len=0;
+        uint8_t len=255;
         
         // read in the packet
-        if (rf69.recv((uint8_t*)packet, &len)) {
+        if (rf69.recv((uint8_t*)packet, &len) && len > 0) {
             //null terminate just in case since we treat this like a char*
-            packet[RH_RF69_MAX_MESSAGE_LEN-1] = 0;
+            packet[len] ='\0';
             lastRssi = rf69.lastRssi();
             
-            sprintf(buffer, "Packet: %s Rssi: %d", (char*)packet, lastRssi);
-            Serial.println((char *) buffer);
-        }
-        else {
-            Serial.println("Receive failed");
-            lastRssi = -100;
-        }
-        
-        // check the packet's rssi
-        if(lastRssi > minRssiThreshold){
-            uint8_t tempProgram = 0, tempPriority = 0;
-            int numFound = sscanf((char*)packet, "%d %d", &tempProgram, &tempPriority);
+            sprintf(buffer, "Packet len: %d \"%s\" Rssi: %d", len, (char*)packet, lastRssi);
+            Serial.println(buffer);
             
-            // if we got two items parsed out of the packet, use them for req
-            if (numFound == 2){
-                requestedProgramPrioity = tempPriority;
-                requestedLedProgram = tempProgram;
-            }
-            else {
-                Serial.println("Bad packet");
-            }
-        }
-        
-        
-    }
+            // check the packet's rssi
+            if(lastRssi > minRssiThreshold){
+                int tempProgram = 0, tempPriority = 0;
+                int numFound = 0;
+                
+                numFound =  sscanf((char*)packet, "%d %d", &tempProgram, &tempPriority);
+                
+                // if we got two items parsed out of the packet, use them for req
+                if (numFound == 2){
+                    requestedProgramPrioity = (uint8_t) tempPriority;
+                    requestedLedProgram = (uint8_t) tempProgram;
+                    sprintf(buffer, "Got req: %d %d Rssi: %d", requestedLedProgram, requestedProgramPrioity, lastRssi);
+                }
+                else {
+                    Serial.println("Bad packet");
+                }
+            } // end if rssi threshold
+        } // end if recv packet
+        else {
+            char buffer[255];
+            sprintf(buffer, "Packet receive failed. len: %d", len);
+            Serial.println(buffer);
+            lastRssi = -100;
+        }  // end else recv packet
+    } // end rf69 packet available
     
     /***********************************************************************/
     // Packet Transmission
@@ -564,18 +567,20 @@ void loop() {
     const unsigned long transmitPeriodMs = 10*1000; // 10s
     if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
         previousTransmitMillis = currentMillis;
+        char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
+        char buffer[255];
         
         // generate a random new program with random priority
         requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
         requestedLedProgram = (uint8_t)random(0, 3); //min inclusive, max exclusive
-        
-        char radiopacket[50];
         sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
-        Serial.print("Sending "); Serial.println(radiopacket);
+        
+        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
+        Serial.println(buffer);
 
         // Send a message!
-        rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
-        //rf69.waitPacketSent();
+        rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
+        rf69.waitPacketSent();
     }
 
     
