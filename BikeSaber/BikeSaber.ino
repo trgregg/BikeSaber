@@ -449,6 +449,8 @@ void loop() {
         // update the previous time record
         previousLedUpdateMillis = currentMillis;
         
+        char buffer[255];
+        
         /***********************************************************************/
         // Program change
         // if there is a new program request, change to it if it has a higher
@@ -461,9 +463,15 @@ void loop() {
         if(requestedProgramPrioity > currentProgramPrioity){
             // change the led program
             currentLedProgram = requestedLedProgram;
-            Serial.println(requestedLedProgram);
             // set the priority so it runs at least 5s
             currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
+            
+            // reset the requested info
+            requestedProgramPrioity = 0;
+            requestedLedProgram = 0;
+            
+            sprintf(buffer, "Changing to prg: %d pri: %d", currentLedProgram, currentProgramPrioity);
+            Serial.println((char*)buffer);
             // TODO: reset all the LED programs?
         }
         else {
@@ -475,8 +483,6 @@ void loop() {
         if(currentLedProgram != previousLedProgram){
             colorWipecurrentPixel = 0;
         }
-        
-        char buffer[255];
         
         digitalWrite(LED_PIN, isLEDOn);
         isLEDOn = !isLEDOn;
@@ -560,7 +566,7 @@ void loop() {
         previousTransmitMillis = currentMillis;
         
         // generate a random new program with random priority
-        requestedProgramPrioity = (int16_t)random(0, minimumProgramTimeMs / priorityDecrementPeriodMs);
+        requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
         requestedLedProgram = (uint8_t)random(0, 3); //min inclusive, max exclusive
         
         char radiopacket[50];
