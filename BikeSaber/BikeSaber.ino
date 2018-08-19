@@ -156,7 +156,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 60
+#define NUMPIXELS 150
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -332,7 +332,7 @@ void colorWipe(uint32_t c) {
     }
 }
 
-void rainbow(uint8_t wait) {
+void rainbow() {
     uint16_t i, j;
     
     for(j=0; j<256; j++) {
@@ -340,12 +340,11 @@ void rainbow(uint8_t wait) {
             strip.setPixelColor(i, Wheel((i+j) & 255));
         }
         strip.show();
-        delay(wait);
     }
 }
 
 // Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint8_t wait) {
+void rainbowCycle() {
     uint16_t i, j;
     
     for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
@@ -353,19 +352,18 @@ void rainbowCycle(uint8_t wait) {
             strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
         }
         strip.show();
-        delay(wait);
     }
 }
 
 //Theatre-style crawling lights.
 void theaterChase(uint32_t c, uint8_t wait) {
-    for (int j=0; j<10; j++) {  //do 10 cycles of chasing
+    for (int j=0; j<1; j++) {  //do 1 cycles of chasing
         for (int q=0; q < 3; q++) {
             for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
                 strip.setPixelColor(i+q, c);    //turn every third pixel on
             }
             strip.show();
-            
+
             delay(wait);
             
             for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
@@ -384,8 +382,8 @@ void theaterChaseRainbow(uint8_t wait) {
             }
             strip.show();
             
-            delay(wait);
-            
+            delay(wait);          
+
             for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
                 strip.setPixelColor(i+q, 0);        //turn every third pixel off
             }
@@ -444,7 +442,7 @@ void loop() {
     // Led update
     // update the LEDs based on the current program
     /***********************************************************************/
-    const unsigned long ledUpdatePeriodMs = 50;
+    const unsigned long ledUpdatePeriodMs = 25;
     if (currentMillis - previousLedUpdateMillis >= ledUpdatePeriodMs){
         // update the previous time record
         previousLedUpdateMillis = currentMillis;
@@ -501,9 +499,33 @@ void loop() {
             case 1: // green color wipe
                 colorWipe(strip.Color(0, 255, 0)); // Grean
                 break;
-            case 2: // green color wipe
+            case 2: // blue color wipe
                 colorWipe(strip.Color(0, 0, 255)); // Blue
                 break;
+            case 4: // yellow color wipe
+                colorWipe(strip.Color(255, 205, 0)); // Yellow
+                break;
+
+            case 5: // rainbow
+                rainbow(); // rainbow
+                break;
+            case 6: // rainbowCycle
+                rainbowCycle(); // rainbowCyle
+                break;
+
+            case 7: // blue color chase
+                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
+                break;        
+            case 8: // red color chase
+                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
+                break;  
+            case 9: // green color chase
+                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
+                break;
+            case 10: // green color chase
+                theaterChaseRainbow(50); // Chase green
+                break;
+                
         }
         
         previousLedProgram = currentLedProgram;
@@ -572,7 +594,7 @@ void loop() {
         
         // generate a random new program with random priority
         requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
-        requestedLedProgram = (uint8_t)random(0, 3); //min inclusive, max exclusive
+        requestedLedProgram = (uint8_t)random(0, 11); //min inclusive, max exclusive
         sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
         
         sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
