@@ -357,14 +357,21 @@ void rainbow() {
 
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle() {
-    uint16_t i, j;
-    
-    for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-        for(i=0; i< strip.numPixels(); i++) {
-            strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
-        }
-        strip.show();
+//    for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+//        for(uint16_t i=0; i< strip.numPixels(); i++) {
+//            strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+//        }
+//        strip.show();
+//    }
+
+    for(uint16_t i=0; i< strip.numPixels(); i++) {
+        strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
     }
+    strip.show();
+
+    rainbowColorMotion++;
+    if(rainbowColorMotion > 256*5) rainbowColorMotion = 0;
+    
 }
 
 //Theatre-style crawling lights.
@@ -432,10 +439,11 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 4;
-    static uint8_t currentLedProgram = 4;
-    static uint8_t previousLedProgram = 4;
-    static uint8_t requestedLedProgram = 4;
+    const uint8_t numLedPrograms = 5;
+    const uint8_t defaultLedProgram = 5;
+    static uint8_t currentLedProgram = defaultLedProgram;
+    static uint8_t previousLedProgram = defaultLedProgram;
+    static uint8_t requestedLedProgram = defaultLedProgram;
     static int16_t currentProgramPrioity = 50+50;
     static int8_t requestedProgramPrioity = 0;
     static unsigned long ledUpdatePeriodMs = 25;
@@ -476,6 +484,9 @@ void loop() {
             currentLedProgram = requestedLedProgram;
             // set the priority so it runs at least 5s
             currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
+            
+            // if the new program is the same as it was last time, increment so we get more changes
+            if(currentLedProgram == previousLedProgram) currentLedProgram++;
             
             // reset the requested info
             requestedProgramPrioity = 0;
@@ -528,27 +539,27 @@ void loop() {
                 ledUpdatePeriodMs = 20;
                 rainbow(); // rainbow
                 break;
-//            case 5: // rainbowCycle
-//                ledUpdatePeriodMs = 20;
-//                rainbowCycle(); // rainbowCyle
-//                break;
-//
-//            case 6: // blue color chase
-//                ledUpdatePeriodMs = 20;
-//                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
-//                break;
-//            case 7: // red color chase
-//                ledUpdatePeriodMs = 20;
-//                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
-//                break;
-//            case 8: // green color chase
-//                ledUpdatePeriodMs = 20;
-//                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
-//                break;
-//            case 9: // color chase
-//                ledUpdatePeriodMs = 20;
-//                theaterChaseRainbow(50); // Chase rainbow
-//                break;
+            case 5: // rainbowCycle
+                ledUpdatePeriodMs = 20;
+                rainbowCycle(); // rainbowCyle
+                break;
+
+            case 6: // blue color chase
+                ledUpdatePeriodMs = 20;
+                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
+                break;
+            case 7: // red color chase
+                ledUpdatePeriodMs = 20;
+                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
+                break;
+            case 8: // green color chase
+                ledUpdatePeriodMs = 20;
+                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
+                break;
+            case 9: // color chase
+                ledUpdatePeriodMs = 20;
+                theaterChaseRainbow(50); // Chase rainbow
+                break;
 
            // case 10: // random color wipe
 //                ledUpdatePeriodMs = 20;
