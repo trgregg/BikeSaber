@@ -375,39 +375,71 @@ void rainbowCycle() {
 }
 
 //Theatre-style crawling lights.
-void theaterChase(uint32_t c, uint8_t wait) {
-    for (int j=0; j<1; j++) {  //do 1 cycles of chasing
-        for (int q=0; q < 3; q++) {
-            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-                strip.setPixelColor(i+q, c);    //turn every third pixel on
-            }
-            strip.show();
+void theaterChase(uint32_t c) {
+//    for (int j=0; j<1; j++) {  //do 1 cycles of chasing
+//        for (int q=0; q < 3; q++) {
+//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+//                strip.setPixelColor(i+q, c);    //turn every third pixel on
+//            }
+//            strip.show();
+//
+//            delay(20);
+//
+//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
+//            }
+//        }
+//    }
+    static uint8_t q;
 
-            delay(wait);
-            
-            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-            }
-        }
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+q-1, 0);    //turn off every third pixel from the previous run
     }
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+q, c);    //set every third pixel
+    }
+    strip.show();
+
+    // every other step, turn the leds off (alternating with the color c)
+    q++;
+    if(q >= 3) q = 0;
+
 }
 
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait) {
-    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-        for (int q=0; q < 3; q++) {
-            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-                strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-            }
-            strip.show();
-            
-            delay(wait);          
-
-            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-            }
-        }
+//    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+//        for (int q=0; q < 3; q++) {
+//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+//                strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
+//            }
+//            strip.show();
+//
+//            delay(wait);
+//
+//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
+//            }
+//        }
+//    }
+    static uint8_t q;
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+q-1, 0);        //turn every third pixel off
     }
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+q, Wheel( (i+rainbowColorMotion) % 255));    //turn every third pixel on
+    }
+    strip.show();
+
+    // every other step, turn the leds off (alternating with the color c)
+    q++;
+    if(q >= 3) q = 0;
+    
+    rainbowColorMotion++;
+    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
 }
 
 
@@ -439,8 +471,8 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 5;
-    const uint8_t defaultLedProgram = 5;
+    const uint8_t numLedPrograms = 9;
+    const uint8_t defaultLedProgram = 9;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -543,21 +575,20 @@ void loop() {
                 ledUpdatePeriodMs = 20;
                 rainbowCycle(); // rainbowCyle
                 break;
-
             case 6: // blue color chase
-                ledUpdatePeriodMs = 20;
-                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 0, 255)); // Chase Blue
                 break;
             case 7: // red color chase
-                ledUpdatePeriodMs = 20;
-                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(255, 0, 0)); // Chase red
                 break;
             case 8: // green color chase
-                ledUpdatePeriodMs = 20;
-                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 255, 0)); // Chase green
                 break;
             case 9: // color chase
-                ledUpdatePeriodMs = 20;
+                ledUpdatePeriodMs = 50;
                 theaterChaseRainbow(50); // Chase rainbow
                 break;
 
