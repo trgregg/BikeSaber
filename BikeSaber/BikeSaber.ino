@@ -156,7 +156,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 150
+#define NUMPIXELS 302
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -328,19 +328,30 @@ void colorWipe(uint32_t c) {
     strip.show();
     colorWipecurrentPixel++;
     if(colorWipecurrentPixel > strip.numPixels()){
+        // we've filled the strip with c, no turn it all off and start back at pixel 0
+        for(int i=0; i < strip.numPixels(); i++){
+          strip.setPixelColor(i, strip.Color(0, 0, 0));
+        }
+        strip.show();
         colorWipecurrentPixel = 0;
     }
 }
 
+uint16_t rainbowColorMotion;
 void rainbow() {
-    uint16_t i, j;
     
-    for(j=0; j<256; j++) {
-        for(i=0; i<strip.numPixels(); i++) {
-            strip.setPixelColor(i, Wheel((i+j) & 255));
-        }
-        strip.show();
+//    for(j=0; j<256; j++) {
+//        for(i=0; i<strip.numPixels(); i++) {
+//            strip.setPixelColor(i, Wheel((i+j) & 255));
+//        }
+//        strip.show();
+//    }
+
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
     }
+    strip.show();
+    rainbowColorMotion = rainbowColorMotion > 255 ? 0 : rainbowColorMotion++;
 }
 
 // Slightly different, this makes the rainbow equally distributed throughout
@@ -471,6 +482,8 @@ void loop() {
             sprintf(buffer, "Changing to prg: %d pri: %d", currentLedProgram, currentProgramPrioity);
             Serial.println((char*)buffer);
             // TODO: reset all the LED programs?
+            colorWipecurrentPixel = 0;
+            rainbowColorMotion = 0;
         }
         else {
             // if there isn't a higher priority, run the previous program
@@ -502,29 +515,41 @@ void loop() {
             case 2: // blue color wipe
                 colorWipe(strip.Color(0, 0, 255)); // Blue
                 break;
-            case 4: // yellow color wipe
+            case 3: // yellow color wipe
                 colorWipe(strip.Color(255, 205, 0)); // Yellow
                 break;
 
-            case 5: // rainbow
+            case 4: // rainbow
                 rainbow(); // rainbow
                 break;
-            case 6: // rainbowCycle
+            case 5: // rainbowCycle
                 rainbowCycle(); // rainbowCyle
                 break;
 
-            case 7: // blue color chase
+            case 6: // blue color chase
                 theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
                 break;        
-            case 8: // red color chase
+            case 7: // red color chase
                 theaterChase(strip.Color(255, 0, 0), 50); // Chase red
                 break;  
-            case 9: // green color chase
+            case 8: // green color chase
                 theaterChase(strip.Color(0, 255, 0), 50); // Chase green
                 break;
-            case 10: // green color chase
-                theaterChaseRainbow(50); // Chase green
+            case 9: // color chase
+                theaterChaseRainbow(50); // Chase rainbow
                 break;
+
+           // case 10: // random color wipe
+             //   int randomRed = (currentProgramPrioity * 2); //use current priority to set color
+             //   int randomGreen = currentProgramPrioity; //use current priority to set color
+             //  int randomBlue = (currentProgramPrioity * .75); //use current priority to set color
+                 
+             //   randomRed = randomRed > 255 ? 256 : randomRed; //only allow upto 256
+             //   randomGreen = randomGreen > 255 ? 256 : randomGreen; //only allow upto 256
+             //   randomBlue = randomBlue > 255 ? 256 : randomBlue; //only allow upto 256
+
+             //   colorWipe(strip.Color(randomRed, randomGreen, randomBlue)); // random red brightness
+             //   break;
                 
         }
         
@@ -594,7 +619,7 @@ void loop() {
         
         // generate a random new program with random priority
         requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
-        requestedLedProgram = (uint8_t)random(0, 11); //min inclusive, max exclusive
+        requestedLedProgram = (uint8_t)random(0, 10); //min inclusive, max exclusive
         sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
         
         sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
