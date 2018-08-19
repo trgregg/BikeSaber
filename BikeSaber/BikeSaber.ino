@@ -327,7 +327,7 @@ void colorWipe(uint32_t c) {
     strip.setPixelColor(colorWipecurrentPixel, c);
     strip.show();
     colorWipecurrentPixel++;
-    if(colorWipecurrentPixel > strip.numPixels()){
+    if(colorWipecurrentPixel >= strip.numPixels()){
         // we've filled the strip with c, no turn it all off and start back at pixel 0
         for(int i=0; i < strip.numPixels(); i++){
           strip.setPixelColor(i, strip.Color(0, 0, 0));
@@ -337,7 +337,7 @@ void colorWipe(uint32_t c) {
     }
 }
 
-uint16_t rainbowColorMotion;
+uint16_t rainbowColorMotion = 0;
 void rainbow() {
     
 //    for(j=0; j<256; j++) {
@@ -351,7 +351,8 @@ void rainbow() {
         strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
     }
     strip.show();
-    rainbowColorMotion = rainbowColorMotion > 255 ? 0 : rainbowColorMotion++;
+    rainbowColorMotion++;
+    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
 }
 
 // Slightly different, this makes the rainbow equally distributed throughout
@@ -431,11 +432,13 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    static uint8_t currentLedProgram = 0;
-    static uint8_t previousLedProgram = 0;
-    static uint8_t requestedLedProgram = 0;
+    const uint8_t numLedPrograms = 4;
+    static uint8_t currentLedProgram = 4;
+    static uint8_t previousLedProgram = 4;
+    static uint8_t requestedLedProgram = 4;
     static int16_t currentProgramPrioity = 50+50;
     static int8_t requestedProgramPrioity = 0;
+    static unsigned long ledUpdatePeriodMs = 25;
     
     
     /***********************************************************************/
@@ -453,7 +456,6 @@ void loop() {
     // Led update
     // update the LEDs based on the current program
     /***********************************************************************/
-    const unsigned long ledUpdatePeriodMs = 25;
     if (currentMillis - previousLedUpdateMillis >= ledUpdatePeriodMs){
         // update the previous time record
         previousLedUpdateMillis = currentMillis;
@@ -507,39 +509,49 @@ void loop() {
                 Serial.println("unknown LED program");
                 // fall through to use 0 as default
             case 0: // red color wipe
+                ledUpdatePeriodMs = 10;
                 colorWipe(strip.Color(255, 0, 0)); // Red
                 break;
             case 1: // green color wipe
+                ledUpdatePeriodMs = 10;
                 colorWipe(strip.Color(0, 255, 0)); // Grean
                 break;
             case 2: // blue color wipe
+                ledUpdatePeriodMs = 10;
                 colorWipe(strip.Color(0, 0, 255)); // Blue
                 break;
             case 3: // yellow color wipe
+                ledUpdatePeriodMs = 10;
                 colorWipe(strip.Color(255, 205, 0)); // Yellow
                 break;
-
             case 4: // rainbow
+                ledUpdatePeriodMs = 20;
                 rainbow(); // rainbow
                 break;
-            case 5: // rainbowCycle
-                rainbowCycle(); // rainbowCyle
-                break;
-
-            case 6: // blue color chase
-                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
-                break;        
-            case 7: // red color chase
-                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
-                break;  
-            case 8: // green color chase
-                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
-                break;
-            case 9: // color chase
-                theaterChaseRainbow(50); // Chase rainbow
-                break;
+//            case 5: // rainbowCycle
+//                ledUpdatePeriodMs = 20;
+//                rainbowCycle(); // rainbowCyle
+//                break;
+//
+//            case 6: // blue color chase
+//                ledUpdatePeriodMs = 20;
+//                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
+//                break;
+//            case 7: // red color chase
+//                ledUpdatePeriodMs = 20;
+//                theaterChase(strip.Color(255, 0, 0), 50); // Chase red
+//                break;
+//            case 8: // green color chase
+//                ledUpdatePeriodMs = 20;
+//                theaterChase(strip.Color(0, 255, 0), 50); // Chase green
+//                break;
+//            case 9: // color chase
+//                ledUpdatePeriodMs = 20;
+//                theaterChaseRainbow(50); // Chase rainbow
+//                break;
 
            // case 10: // random color wipe
+//                ledUpdatePeriodMs = 20;
              //   int randomRed = (currentProgramPrioity * 2); //use current priority to set color
              //   int randomGreen = currentProgramPrioity; //use current priority to set color
              //  int randomBlue = (currentProgramPrioity * .75); //use current priority to set color
@@ -619,7 +631,8 @@ void loop() {
         
         // generate a random new program with random priority
         requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
-        requestedLedProgram = (uint8_t)random(0, 10); //min inclusive, max exclusive
+        requestedLedProgram = (uint8_t)random(0, numLedPrograms
+                                              +1); //min inclusive, max exclusive
         sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
         
         sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
