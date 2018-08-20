@@ -570,7 +570,7 @@ void loop() {
                 break;
             case 3: // purple color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 75, 75)); // Purple
+                colorWipe(strip.Color(75, 0, 75)); // Purple
                 break;
             case 4: // rainbow
                 ledUpdatePeriodMs = 20;
@@ -594,7 +594,7 @@ void loop() {
                 break;
             case 9: // purple color chase
                 ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 75, 75)); // Chase purple
+                theaterChase(strip.Color(75, 0, 75)); // Chase purple
                 break;
             case 10: // color chase
                 ledUpdatePeriodMs = 50;
