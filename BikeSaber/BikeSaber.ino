@@ -211,7 +211,7 @@ void setup()
     rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
     
     // The encryption key has to be the same as the one in the server
-    uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    uint8_t key[] = { 0xD3, 0xAD, 0x00, 0xB3, 0xB3, 0xF0, 0x07, 0x08,
         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
     rf69.setEncryptionKey(key);
     
@@ -573,11 +573,11 @@ void loop() {
                 colorWipe(strip.Color(75, 0, 75)); // Purple
                 break;
             case 4: // rainbow
-                ledUpdatePeriodMs = 20;
+                ledUpdatePeriodMs = 10;
                 rainbow(); // rainbow
                 break;
             case 5: // rainbowCycle
-                ledUpdatePeriodMs = 20;
+                ledUpdatePeriodMs = 10;
                 rainbowCycle(); // rainbowCyle
                 break;
             case 6: // blue color chase
@@ -600,6 +600,7 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 theaterChaseRainbow(50); // Chase rainbow
                 break;
+            
 
            // case 10: // random color wipe
 //                ledUpdatePeriodMs = 20;
@@ -625,7 +626,7 @@ void loop() {
     // is above a threshold, decode it and
     // use it as the requested program and priority
     /***********************************************************************/
-    const int minRssiThreshold = -30;
+    const int minRssiThreshold = -80;
     if (rf69.available()){
         char buffer[255];
         uint8_t packet[RH_RF69_MAX_MESSAGE_LEN];
