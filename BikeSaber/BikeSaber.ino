@@ -476,7 +476,7 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 11;
+    const uint8_t numLedPrograms = 10; // max case id, not count
     const uint8_t defaultLedProgram = 10;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
