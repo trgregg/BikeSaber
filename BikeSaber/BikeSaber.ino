@@ -347,8 +347,10 @@ void rainbow() {
 //        strip.show();
 //    }
 
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
+    for(uint16_t i=0; i<strip.numPixels(); i=i+2) {
+        strip.setPixelColor(i-1, 0);    //turn off every other pixel
         strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
+
     }
     strip.show();
     rainbowColorMotion++;
@@ -364,13 +366,16 @@ void rainbowCycle() {
 //        strip.show();
 //    }
 
-    for(uint16_t i=0; i< strip.numPixels(); i++) {
+    for(uint16_t i=0; i< strip.numPixels(); i=i+2) {
+        strip.setPixelColor(i-1, 0);    //turn off every other pixel
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
     }
+
     strip.show();
 
     rainbowColorMotion++;
     if(rainbowColorMotion > 256*5) rainbowColorMotion = 0;
+
     
 }
 
@@ -471,8 +476,8 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 9;
-    const uint8_t defaultLedProgram = 9;
+    const uint8_t numLedPrograms = 11;
+    const uint8_t defaultLedProgram = 10;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -553,19 +558,19 @@ void loop() {
                 // fall through to use 0 as default
             case 0: // red color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(255, 0, 0)); // Red
+                colorWipe(strip.Color(100, 0, 0)); // Red
                 break;
             case 1: // green color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 255, 0)); // Grean
+                colorWipe(strip.Color(0, 100, 0)); // Grean
                 break;
             case 2: // blue color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 0, 255)); // Blue
+                colorWipe(strip.Color(0, 0, 100)); // Blue
                 break;
-            case 3: // yellow color wipe
+            case 3: // purple color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(255, 205, 0)); // Yellow
+                colorWipe(strip.Color(0, 75, 75)); // Purple
                 break;
             case 4: // rainbow
                 ledUpdatePeriodMs = 20;
@@ -587,7 +592,11 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 theaterChase(strip.Color(0, 255, 0)); // Chase green
                 break;
-            case 9: // color chase
+            case 9: // purple color chase
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 75, 75)); // Chase purple
+                break;
+            case 10: // color chase
                 ledUpdatePeriodMs = 50;
                 theaterChaseRainbow(50); // Chase rainbow
                 break;
