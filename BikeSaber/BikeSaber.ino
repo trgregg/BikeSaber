@@ -358,9 +358,50 @@ void policeMode() {
             strip.show();
             break;
      }
-
 }
 
+
+// China flashing Red-Blue on the full string
+int policeChinaPreviousColor = 0;
+void policeChinaMode(uint8_t wait) {
+
+        // red color wipe
+        if(policeChinaPreviousColor == 0 || policeChinaPreviousColor == 2){
+            policeChinaPreviousColor++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                 strip.setPixelColor(i, strip.Color(0, 200, 0));
+                 }
+            strip.show();
+            delay(wait);
+        }
+        
+        // off wipe
+        if(policeChinaPreviousColor == 1 || 
+        policeChinaPreviousColor == 3 || policeChinaPreviousColor == 4 || policeChinaPreviousColor == 5 || 
+        policeChinaPreviousColor == 7 || 
+        policeChinaPreviousColor == 9 || policeChinaPreviousColor == 10 || policeChinaPreviousColor == 11){
+        policeChinaPreviousColor++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                 strip.setPixelColor(i, strip.Color(0, 0, 0));
+                }
+            strip.show();
+            delay(wait*4);
+        }
+
+        // blue color wipe
+        if(policeChinaPreviousColor == 6 || policeChinaPreviousColor == 8){
+            policeChinaPreviousColor++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                 strip.setPixelColor(i, strip.Color(0, 0, 200));
+                }
+            strip.show();
+            delay(wait);
+        }
+        
+        // reset 
+        if( policeChinaPreviousColor == 12) {policeChinaPreviousColor=0;}
+       
+}
 
 uint16_t rainbowColorMotion = 0;
 void rainbow() {
@@ -501,8 +542,8 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 11; // max case id, not count
-    const uint8_t defaultLedProgram = 10;
+    const uint8_t numLedPrograms = 12; // max case id, not count
+    const uint8_t defaultLedProgram = 12;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -628,6 +669,10 @@ void loop() {
             case 11: // poice mode
                 ledUpdatePeriodMs = 200;
                 policeMode(); // Police Mode
+                break;
+            case 12: // china poice mode
+                ledUpdatePeriodMs = 50;
+                policeChinaMode(25); // china Police Mode
                 break;
 
            // case 10: // random color wipe
