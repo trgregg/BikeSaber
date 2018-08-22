@@ -156,7 +156,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 302
+#define NUMPIXELS 155
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -327,15 +327,40 @@ void colorWipe(uint32_t c) {
     strip.setPixelColor(colorWipecurrentPixel, c);
     strip.show();
     colorWipecurrentPixel++;
-    if(colorWipecurrentPixel >= strip.numPixels()){
+    if(colorWipecurrentPixel >= strip.numPixels()+100){
         // we've filled the strip with c, no turn it all off and start back at pixel 0
-        for(int i=0; i < strip.numPixels(); i++){
+        for(int i=0; i < (strip.numPixels()); i++){
           strip.setPixelColor(i, strip.Color(0, 0, 0));
         }
         strip.show();
         colorWipecurrentPixel = 0;
     }
 }
+
+// Flash Red-Blue on the full string
+int policePreviousColor = 0;
+void policeMode() {
+     switch(policePreviousColor){
+
+        case 0: // red color wipe
+            policePreviousColor++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                 strip.setPixelColor(i, strip.Color(0, 150, 0));
+            }
+            strip.show();
+            break;
+
+        case 1: // green color wipe
+            policePreviousColor=0;
+            for(int i=0; i < (strip.numPixels()); i++){
+                 strip.setPixelColor(i, strip.Color(0, 0, 150));
+            }
+            strip.show();
+            break;
+     }
+
+}
+
 
 uint16_t rainbowColorMotion = 0;
 void rainbow() {
@@ -476,7 +501,7 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 10; // max case id, not count
+    const uint8_t numLedPrograms = 11; // max case id, not count
     const uint8_t defaultLedProgram = 10;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
@@ -558,15 +583,15 @@ void loop() {
                 // fall through to use 0 as default
             case 0: // red color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(100, 0, 0)); // Red
+                colorWipe(strip.Color(150, 0, 0)); // Red
                 break;
             case 1: // green color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 100, 0)); // Grean
+                colorWipe(strip.Color(0, 150, 0)); // Grean
                 break;
             case 2: // blue color wipe
                 ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 0, 100)); // Blue
+                colorWipe(strip.Color(0, 0, 150)); // Blue
                 break;
             case 3: // purple color wipe
                 ledUpdatePeriodMs = 10;
@@ -600,7 +625,10 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 theaterChaseRainbow(50); // Chase rainbow
                 break;
-            
+            case 11: // poice mode
+                ledUpdatePeriodMs = 200;
+                policeMode(); // Police Mode
+                break;
 
            // case 10: // random color wipe
 //                ledUpdatePeriodMs = 20;
