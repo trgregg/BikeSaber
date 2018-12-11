@@ -403,6 +403,50 @@ void policeChinaMode(uint8_t wait) {
        
 }
 
+
+void xMasRed(uint8_t wait) {
+
+        // red color wipe
+        for(int i=0; i < (strip.numPixels()); i++){
+             strip.setPixelColor(i, strip.Color(0, 200, 0));
+             }
+        strip.show();
+        delay(wait);
+}
+
+
+void xMasGreen(uint8_t wait) {
+
+        // green color wipe
+        for(int i=0; i < (strip.numPixels()); i++){
+             strip.setPixelColor(i, strip.Color(250, 25, 0));
+             }
+        strip.show();
+        delay(wait);     
+}
+
+
+void xMasWhite(uint8_t wait) {
+
+        // white color wipe
+        for(int i=0; i < (strip.numPixels()); i++){
+             strip.setPixelColor(i, strip.Color(200, 100, 200));
+             }
+        strip.show();
+        delay(wait);     
+}
+
+void xMasBlue(uint8_t wait) {
+
+        // blue color wipe
+        for(int i=0; i < (strip.numPixels()); i++){
+             strip.setPixelColor(i, strip.Color(150, 0, 200));
+             }
+        strip.show();
+        delay(wait);     
+}
+
+
 uint16_t rainbowColorMotion = 0;
 void rainbow() {
     
@@ -542,8 +586,8 @@ void loop() {
     unsigned long currentMillis = millis();
     
     // led program controls
-    const uint8_t numLedPrograms = 12; // max case id, not count
-    const uint8_t defaultLedProgram = 12;
+    const uint8_t numLedPrograms = 16; // max case id, not count
+    const uint8_t defaultLedProgram = 13;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -556,7 +600,7 @@ void loop() {
     // Program priority update
     /***********************************************************************/
     const unsigned long priorityDecrementPeriodMs = 100;
-    const unsigned long minimumProgramTimeMs = 5000;
+    const unsigned long minimumProgramTimeMs = 10*1000; // 10s
     if(currentMillis - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
         previousPriorityUpdateMillis = currentMillis;
         currentProgramPrioity = currentProgramPrioity == 0 ? 0 : --currentProgramPrioity;
@@ -674,7 +718,25 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 policeChinaMode(25); // china Police Mode
                 break;
+// Xmas lights
+            case 13: // xMas Red mode
+                ledUpdatePeriodMs = 50;
+                xMasRed(25); // X-Mas Red Mode
+                break;
+            case 14: // xMas Green mode
+                ledUpdatePeriodMs = 50;
+                xMasGreen(25); // X-Mas Green Mode
+                break;
+            case 15: // xMas White mode
+                ledUpdatePeriodMs = 50;
+                xMasWhite(25); // X-Mas White Mode
+                break;
+            case 16: // xMas Blue mode
+                ledUpdatePeriodMs = 50;
+                xMasBlue(25); // X-Mas Blue Mode
+                break;
 
+                
            // case 10: // random color wipe
 //                ledUpdatePeriodMs = 20;
              //   int randomRed = (currentProgramPrioity * 2); //use current priority to set color
@@ -748,25 +810,28 @@ void loop() {
     // if this new priority is higher than the current priority, switch our
     // current program
     /***********************************************************************/
-    const unsigned long transmitPeriodMs = 10*1000; // 10s
-    if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
-        previousTransmitMillis = currentMillis;
-        char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
-        char buffer[255];
-        
-        // generate a random new program with random priority
-        requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
-        requestedLedProgram = (uint8_t)random(0, numLedPrograms
-                                              +1); //min inclusive, max exclusive
-        sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
-        
-        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
-        Serial.println(buffer);
-
-        // Send a message!
-        rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
-        rf69.waitPacketSent();
-    }
+    /***********************************************************************/
+    // Commenting out Transmit for slave units for Xmas Lights
+    /***********************************************************************/
+//    const unsigned long transmitPeriodMs = 60*1000; // 60s
+//    if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
+//        previousTransmitMillis = currentMillis;
+//        char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
+//        char buffer[255];
+//        
+//        // generate a random new program with random priority
+//        requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
+//        requestedLedProgram = (uint8_t)random(13, numLedPrograms
+//                                              +1); //min inclusive, max exclusive
+//        sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
+//        
+//        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
+//        Serial.println(buffer);
+//
+//        // Send a message!
+//        rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
+//        rf69.waitPacketSent();
+//    }
 
     
 }
