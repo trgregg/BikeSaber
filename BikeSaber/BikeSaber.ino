@@ -6,18 +6,19 @@
 /// @n
 /// @n @a		Developed with [embedXcode+](http://embedXcode.weebly.com)
 ///
-/// @author		Justin Gregg
-/// @author		Rodentia
-/// @date		7/18/18 5:45 PM
+/// @author		Travis Gregg
+/// @author		marroug
+/// @date		December, 12 3:01 PM
 /// @version	<#version#>
 ///
-/// @copyright	(c) Justin Gregg, 2018
+/// @copyright	(c) Travis Gregg, 2018
 /// @copyright	Licence
 ///
 /// @see		ReadMe.txt for references
 ///
 
 
+/// Largely borrowed from Justin Gregg's BikeSaber project
 ///
 /// @file		BikeSaber.ino
 /// @brief		Main sketch for Burning Man BikeSabers
@@ -225,344 +226,18 @@ void setup()
     
 }
 
-//void loop() {
-//    unsigned long timeSent = 0;
-//    delay(100);
-//
-//    char radiopacket[20] = "Hello World #";
-//    itoa(packetnum++, radiopacket+13, 10);
-//    Serial.print("Sending "); Serial.println(radiopacket);
-//
-//    // Send a message!
-//    rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
-//    rf69.waitPacketSent();
-//    timeSent = micros();
-//
-//    // Now wait for a reply
-//    uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-//    uint8_t len = sizeof(buf);
-//    int8_t lastRssi = -100;
-//
-//
-//    //if (rf69.waitAvailableTimeout(500))  {
-//    if (rf69.available()){
-//        newPacketFlag = false;
-//        unsigned long timeOfResponse = micros();
-//        sprintf((char*)buf, "Got a reply after %d: ", timeOfResponse - timeSent);
-//        Serial.print((char*)buf);
-//        // Should be a reply message for us now
-//        if (rf69.recv(buf, &len)) {
-//            Serial.print((char*)buf);
-//            Serial.print(" ");
-//            lastRssi = rf69.lastRssi();
-//            Serial.println(lastRssi, DEC);
-//            Blink(LED, 50, 3); //blink LED 3 times, 50ms between blinks
-//        } else {
-//            Serial.println("Receive failed");
-//            lastRssi = -100;
-//        }
-//    } else {
-//        Serial.println("No reply, is another RFM69 listening?");
-//        lastRssi = -100;
-//    }
-//
-//    static uint8_t frameNumber = 0;
-//    frameNumber++;
-//    frameNumber = frameNumber % 4;
-//    for(int i=0;i<NUMPIXELS;i++){
-//        int colors[2][4] = {{0x960000, 0x009600, 0x000096, 0x000000}, // R, G, B, 0
-//                            {0x000015, 0x000050, 0x000096, 0x000050}}; // blue breath
-//        int color = 0;
-//        uint8_t currentColorPattern = 0;
-//        static uint8_t previousColorPattern = 0;
-//
-//        // set the color pattern based on the last RSSI
-//        if(lastRssi > -30){
-//            currentColorPattern = 0;
-//        }
-//        else {
-//            currentColorPattern = 1;
-//        }
-//
-//        // if the color pattern changed, re-start the frame counter
-//        // this will have the color patterns always start at the beginning.
-//        if (previousColorPattern != currentColorPattern){
-//            frameNumber = 0;
-//        }
-//        previousColorPattern = currentColorPattern;
-//
-//        color = colors[currentColorPattern][frameNumber];
-//
-//        // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-//        //pixels.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
-//        pixels.setPixelColor(i, pixels.Color((uint8_t)(color>>16),
-//                                             (uint8_t)(color>>8),
-//                                             (uint8_t)(color))); // Moderately bright green color.
-//
-//    }
-//    pixels.show(); // This sends the updated pixel color to the hardware.
-//}
-
-
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-    WheelPos = 255 - WheelPos;
-    if(WheelPos < 85) {
-        return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-    }
-    if(WheelPos < 170) {
-        WheelPos -= 85;
-        return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-    }
-    WheelPos -= 170;
-    return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-}
-
-
-
-// Fill the dots one after the other with a color
-uint16_t colorWipecurrentPixel = 0;
-void colorWipe(uint32_t c) {
-    strip.setPixelColor(colorWipecurrentPixel, c);
-    strip.show();
-    colorWipecurrentPixel++;
-    if(colorWipecurrentPixel >= strip.numPixels()+100){
-        // we've filled the strip with c, no turn it all off and start back at pixel 0
+void xMasUpdateColor(uint8_t Red, uint8_t Green, uint8_t Blue) {
         for(int i=0; i < (strip.numPixels()); i++){
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
-        }
-        strip.show();
-        colorWipecurrentPixel = 0;
-    }
-}
-
-// Flash Red-Blue on the full string
-int policePreviousColor = 0;
-void policeMode() {
-     switch(policePreviousColor){
-
-        case 0: // red color wipe
-            policePreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 150, 0));
-            }
-            strip.show();
-            break;
-
-        case 1: // green color wipe
-            policePreviousColor=0;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 150));
-            }
-            strip.show();
-            break;
-     }
-}
-
-
-// China flashing Red-Blue on the full string
-int policeChinaPreviousColor = 0;
-void policeChinaMode(uint8_t wait) {
-
-        // red color wipe
-        if(policeChinaPreviousColor == 0 || policeChinaPreviousColor == 2){
-            policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 200, 0));
-                 }
-            strip.show();
-            delay(wait);
-        }
-        
-        // off wipe
-        if(policeChinaPreviousColor == 1 || 
-        policeChinaPreviousColor == 3 || policeChinaPreviousColor == 4 || policeChinaPreviousColor == 5 || 
-        policeChinaPreviousColor == 7 || 
-        policeChinaPreviousColor == 9 || policeChinaPreviousColor == 10 || policeChinaPreviousColor == 11){
-        policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 0));
-                }
-            strip.show();
-            delay(wait*4);
-        }
-
-        // blue color wipe
-        if(policeChinaPreviousColor == 6 || policeChinaPreviousColor == 8){
-            policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 200));
-                }
-            strip.show();
-            delay(wait);
-        }
-        
-        // reset 
-        if( policeChinaPreviousColor == 12) {policeChinaPreviousColor=0;}
-       
-}
-
-
-void xMasRed(uint8_t wait) {
-
-        // red color wipe
-        for(int i=0; i < (strip.numPixels()); i++){
-             strip.setPixelColor(i, strip.Color(0, 200, 0));
+             strip.setPixelColor(i, strip.Color(Red, Green, Blue));
              }
         strip.show();
-        delay(wait);
+        delay(25);
 }
-
-
-void xMasGreen(uint8_t wait) {
-
-        // green color wipe
-        for(int i=0; i < (strip.numPixels()); i++){
-             strip.setPixelColor(i, strip.Color(250, 25, 0));
-             }
-        strip.show();
-        delay(wait);     
-}
-
-
-void xMasWhite(uint8_t wait) {
-
-        // white color wipe
-        for(int i=0; i < (strip.numPixels()); i++){
-             strip.setPixelColor(i, strip.Color(200, 100, 200));
-             }
-        strip.show();
-        delay(wait);     
-}
-
-void xMasBlue(uint8_t wait) {
-
-        // blue color wipe
-        for(int i=0; i < (strip.numPixels()); i++){
-             strip.setPixelColor(i, strip.Color(150, 0, 200));
-             }
-        strip.show();
-        delay(wait);     
-}
-
-
-uint16_t rainbowColorMotion = 0;
-void rainbow() {
-    
-//    for(j=0; j<256; j++) {
-//        for(i=0; i<strip.numPixels(); i++) {
-//            strip.setPixelColor(i, Wheel((i+j) & 255));
-//        }
-//        strip.show();
-//    }
-
-    for(uint16_t i=0; i<strip.numPixels(); i=i+2) {
-        strip.setPixelColor(i-1, 0);    //turn off every other pixel
-        strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
-
-    }
-    strip.show();
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
-}
-
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle() {
-//    for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-//        for(uint16_t i=0; i< strip.numPixels(); i++) {
-//            strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
-//        }
-//        strip.show();
-//    }
-
-    for(uint16_t i=0; i< strip.numPixels(); i=i+2) {
-        strip.setPixelColor(i-1, 0);    //turn off every other pixel
-        strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
-    }
-
-    strip.show();
-
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 256*5) rainbowColorMotion = 0;
-
-    
-}
-
-//Theatre-style crawling lights.
-void theaterChase(uint32_t c) {
-//    for (int j=0; j<1; j++) {  //do 1 cycles of chasing
-//        for (int q=0; q < 3; q++) {
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, c);    //turn every third pixel on
-//            }
-//            strip.show();
-//
-//            delay(20);
-//
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//            }
-//        }
-//    }
-    static uint8_t q;
-
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q-1, 0);    //turn off every third pixel from the previous run
-    }
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, c);    //set every third pixel
-    }
-    strip.show();
-
-    // every other step, turn the leds off (alternating with the color c)
-    q++;
-    if(q >= 3) q = 0;
-
-}
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-//    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-//        for (int q=0; q < 3; q++) {
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-//            }
-//            strip.show();
-//
-//            delay(wait);
-//
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//            }
-//        }
-//    }
-    static uint8_t q;
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q-1, 0);        //turn every third pixel off
-    }
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, Wheel( (i+rainbowColorMotion) % 255));    //turn every third pixel on
-    }
-    strip.show();
-
-    // every other step, turn the leds off (alternating with the color c)
-    q++;
-    if(q >= 3) q = 0;
-    
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
-}
-
 
 
 
 void loop() {
-    // Some example procedures showing how to display to the pixels:
-
+// Some example procedures showing how to display to the pixels:
 //    colorWipe(strip.Color(0, 255, 0), 50); // Green
 //    colorWipe(strip.Color(0, 0, 255), 50); // Blue
 //
@@ -580,186 +255,50 @@ void loop() {
     // tiemr statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
     static unsigned long previousTransmitMillis = 0;
-    static unsigned long previousPriorityUpdateMillis = 0;
-    
+    static unsigned long previousColorUpdateMillis = 0;
+    const unsigned long transmitPeriodMs = 100; 
+
+    // led timeout for when we don't recieve a packet, meaning the braodcast controller is OFF, or we missed 10 packets
+    const unsigned long ledUpdatePeriodMs = transmitPeriodMs * 10;
+
+    // Start broadcasting with LED color Red
+    static int sendRed = 200; 
+    static int sendGreen = 0; 
+    static int sendBlue = 0;
+    static int requestedRed = 200; 
+    static int requestedGreen = 0; 
+    static int requestedBlue = 0;
+
     // current time info
     unsigned long currentMillis = millis();
-    
-    // led program controls
-    const uint8_t numLedPrograms = 16; // max case id, not count
-    const uint8_t defaultLedProgram = 13;
-    static uint8_t currentLedProgram = defaultLedProgram;
-    static uint8_t previousLedProgram = defaultLedProgram;
-    static uint8_t requestedLedProgram = defaultLedProgram;
-    static int16_t currentProgramPrioity = 50+50;
-    static int8_t requestedProgramPrioity = 0;
-    static unsigned long ledUpdatePeriodMs = 25;
-    
-    
+       
     /***********************************************************************/
-    // Program priority update
-    /***********************************************************************/
-    const unsigned long priorityDecrementPeriodMs = 100;
-    const unsigned long minimumProgramTimeMs = 10*1000; // 10s
-    if(currentMillis - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
-        previousPriorityUpdateMillis = currentMillis;
-        currentProgramPrioity = currentProgramPrioity == 0 ? 0 : --currentProgramPrioity;
-    }
-    
-    
-    /***********************************************************************/
-    // Led update
-    // update the LEDs based on the current program
+    // If we haven't received a packet and updated the LEDs in a while, turn off the LEDs
     /***********************************************************************/
     if (currentMillis - previousLedUpdateMillis >= ledUpdatePeriodMs){
         // update the previous time record
         previousLedUpdateMillis = currentMillis;
+
+        // Since we didn't get any packets, setting LEDs OFF
+        sendRed = 0; sendGreen = 0; sendBlue = 0;
         
         char buffer[255];
         
-        /***********************************************************************/
-        // Program change
-        // if there is a new program request, change to it if it has a higher
-        // priority than our current priority
-        // if the program changes, we want to run each program for at least 5s,
-        /// so we set the new priority to the requested priorty plus 5 *priorityDecrementPeriodMs
-        /***********************************************************************/
-        // check to see if there is a new program requested
-        // and that the request has a higher priority than our current priority
-        if(requestedProgramPrioity > currentProgramPrioity){
-            // change the led program
-            currentLedProgram = requestedLedProgram;
-            // set the priority so it runs at least 5s
-            currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
-            
-            // if the new program is the same as it was last time, increment so we get more changes
-            if(currentLedProgram == previousLedProgram) currentLedProgram++;
-            
-            // reset the requested info
-            requestedProgramPrioity = 0;
-            requestedLedProgram = 0;
-            
-            sprintf(buffer, "Changing to prg: %d pri: %d", currentLedProgram, currentProgramPrioity);
-            Serial.println((char*)buffer);
-            // TODO: reset all the LED programs?
-            colorWipecurrentPixel = 0;
-            rainbowColorMotion = 0;
-        }
-        else {
-            // if there isn't a higher priority, run the previous program
-            currentLedProgram = previousLedProgram;
-        }
-        
-        // if the program changed, reset the pixel programs
-        if(currentLedProgram != previousLedProgram){
-            colorWipecurrentPixel = 0;
-        }
-        
         digitalWrite(LED_PIN, isLEDOn);
         isLEDOn = !isLEDOn;
-        //Serial.println(++i);
-        //Serial.println(currentMillis);
-        sprintf(buffer, "%ld: prg: %d pri: %d", currentMillis, currentLedProgram, currentProgramPrioity);
+
+        sprintf(buffer, "%ld: Color: %d %d %d", sendRed, sendGreen, sendBlue);
         Serial.println((char*)buffer);
         
-        switch(currentLedProgram){
-            default:
-                Serial.println("unknown LED program");
-                // fall through to use 0 as default
-            case 0: // red color wipe
-                ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(150, 0, 0)); // Red
-                break;
-            case 1: // green color wipe
-                ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 150, 0)); // Grean
-                break;
-            case 2: // blue color wipe
-                ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(0, 0, 150)); // Blue
-                break;
-            case 3: // purple color wipe
-                ledUpdatePeriodMs = 10;
-                colorWipe(strip.Color(75, 0, 75)); // Purple
-                break;
-            case 4: // rainbow
-                ledUpdatePeriodMs = 10;
-                rainbow(); // rainbow
-                break;
-            case 5: // rainbowCycle
-                ledUpdatePeriodMs = 10;
-                rainbowCycle(); // rainbowCyle
-                break;
-            case 6: // blue color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 0, 255)); // Chase Blue
-                break;
-            case 7: // red color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(255, 0, 0)); // Chase red
-                break;
-            case 8: // green color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 255, 0)); // Chase green
-                break;
-            case 9: // purple color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(75, 0, 75)); // Chase purple
-                break;
-            case 10: // color chase
-                ledUpdatePeriodMs = 50;
-                theaterChaseRainbow(50); // Chase rainbow
-                break;
-            case 11: // poice mode
-                ledUpdatePeriodMs = 200;
-                policeMode(); // Police Mode
-                break;
-            case 12: // china poice mode
-                ledUpdatePeriodMs = 50;
-                policeChinaMode(25); // china Police Mode
-                break;
-// Xmas lights
-            case 13: // xMas Red mode
-                ledUpdatePeriodMs = 50;
-                xMasRed(25); // X-Mas Red Mode
-                break;
-            case 14: // xMas Green mode
-                ledUpdatePeriodMs = 50;
-                xMasGreen(25); // X-Mas Green Mode
-                break;
-            case 15: // xMas White mode
-                ledUpdatePeriodMs = 50;
-                xMasWhite(25); // X-Mas White Mode
-                break;
-            case 16: // xMas Blue mode
-                ledUpdatePeriodMs = 50;
-                xMasBlue(25); // X-Mas Blue Mode
-                break;
+        xMasUpdateColor(sendRed, sendGreen, sendBlue);
 
-                
-           // case 10: // random color wipe
-//                ledUpdatePeriodMs = 20;
-             //   int randomRed = (currentProgramPrioity * 2); //use current priority to set color
-             //   int randomGreen = currentProgramPrioity; //use current priority to set color
-             //  int randomBlue = (currentProgramPrioity * .75); //use current priority to set color
-                 
-             //   randomRed = randomRed > 255 ? 256 : randomRed; //only allow upto 256
-             //   randomGreen = randomGreen > 255 ? 256 : randomGreen; //only allow upto 256
-             //   randomBlue = randomBlue > 255 ? 256 : randomBlue; //only allow upto 256
-
-             //   colorWipe(strip.Color(randomRed, randomGreen, randomBlue)); // random red brightness
-             //   break;
-                
-        }
-        
-        previousLedProgram = currentLedProgram;
     }
     
     /***********************************************************************/
     // Packet receive
     // Check if there is a new packet available, if there is, and the rssi
     // is above a threshold, decode it and
-    // use it as the requested program and priority
+    // use it as the requested color, update LEDs, and update previousLedUpdateMillis
     /***********************************************************************/
     const int minRssiThreshold = -80;
     if (rf69.available()){
@@ -779,16 +318,20 @@ void loop() {
             
             // check the packet's rssi
             if(lastRssi > minRssiThreshold){
-                int tempProgram = 0, tempPriority = 0;
+                int tempRed = 0, tempGreen = 0, tempBlue = 0;
                 int numFound = 0;
                 
-                numFound =  sscanf((char*)packet, "%d %d", &tempProgram, &tempPriority);
+                numFound =  sscanf((char*)packet, "%d %d %d", &tempRed, &tempGreen, &tempBlue);
                 
                 // if we got two items parsed out of the packet, use them for req
-                if (numFound == 2){
-                    requestedProgramPrioity = (uint8_t) tempPriority;
-                    requestedLedProgram = (uint8_t) tempProgram;
-                    sprintf(buffer, "Got req: %d %d Rssi: %d", requestedLedProgram, requestedProgramPrioity, lastRssi);
+                if (numFound == 3){
+                    requestedRed = tempRed;
+                    requestedGreen = tempGreen;
+                    requestedBlue = tempBlue;
+
+                    previousLedUpdateMillis = currentMillis;
+                    
+                    sprintf(buffer, "Got req: %d %d %d Rssi: %d", requestedRed, requestedGreen, requestedBlue, lastRssi);
                 }
                 else {
                     Serial.println("Bad packet");
@@ -801,40 +344,66 @@ void loop() {
             Serial.println(buffer);
             lastRssi = -100;
         }  // end else recv packet
+
+        // Update the LEDs based on what we received
+        xMasUpdateColor(requestedRed, requestedGreen, requestedBlue);
+
     } // end rf69 packet available
-    
+
+
     /***********************************************************************/
     // Packet Transmission
-    // Send out a new program choice by generating a random program numer
-    // and a random program priority
-    // if this new priority is higher than the current priority, switch our
-    // current program
+    // Send out an RGB color every 100ms
+    // If it has been a minute since we changed color, change the color
     /***********************************************************************/
     /***********************************************************************/
-    // Commenting out Transmit for slave units for Xmas Lights
+    // Comment out this transmit for slave units for Xmas Lights
     /***********************************************************************/
-//    const unsigned long transmitPeriodMs = 60*1000; // 60s
-//    if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
-//        previousTransmitMillis = currentMillis;
-//        char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
-//        char buffer[255];
-//        
-//        // generate a random new program with random priority
-//        requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
-//        requestedLedProgram = (uint8_t)random(13, numLedPrograms
-//                                              +1); //min inclusive, max exclusive
-//        sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
-//        
-//        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket));
-//        Serial.println(buffer);
-//
-//        // Send a message!
-//        rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
-//        rf69.waitPacketSent();
-//    }
-
     
-}
+    if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
+        previousTransmitMillis = currentMillis;
+        char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
+        char buffer[255];
+        
+        // Make a selection for the color we want to send if it's been a minute since we last changed
+        const unsigned long updateColorPeriodMs = 60*1000; // 60s 
+        if (currentMillis - previousColorUpdateMillis >= updateColorPeriodMs){
+            previousColorUpdateMillis = currentMillis;
+
+            // Pick a RGB color to send to listeners
+            int pickColor = (uint8_t)random(1, 5); //min inclusive, max exclusive
+            
+            switch(pickColor){
+                default:
+                    Serial.println("Defaulting to OFF");
+                    // fall through to use 0 as default
+                // Xmas lights
+                case 0: // black/off color wipe
+                    sendRed = 0, sendGreen = 0, sendBlue = 0; // OFF
+                case 1: // xMas Red mode
+                    sendRed = 200, sendGreen = 0, sendBlue = 0;
+                case 2: // xMas Green mode
+                   sendRed = 25, sendGreen = 250, sendBlue = 0;
+                case 3: // xMas White mode
+                    sendRed = 200, sendGreen = 100, sendBlue = 200;
+                case 4: // xMas Blue mode
+                    sendRed = 100, sendGreen = 0, sendBlue = 200;
+            }
+        }
+
+
+        // Broadcast the color we want
+        sprintf(radiopacket, "%d %d %d", sendRed, sendGreen, sendBlue);
+        
+        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", sendRed, sendGreen, sendBlue, radiopacket, strlen(radiopacket));
+        Serial.println(buffer);
+
+        // Send a message!
+        rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
+        rf69.waitPacketSent();
+    } // end transmit
+    
+} // end loop
 
 
 
