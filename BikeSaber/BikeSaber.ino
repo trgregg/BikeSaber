@@ -157,8 +157,8 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-//#define NUMPIXELS 155
-#define NUMPIXELS 10
+#define NUMPIXELS 155
+//#define NUMPIXELS 10
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -228,6 +228,9 @@ void setup()
 }
 
 void xMasUpdateColor(uint8_t Red, uint8_t Green, uint8_t Blue) {
+        char buffer[255];
+        sprintf(buffer, "Setting %d LEDs to red:%d green:%d blue:%d", NUMPIXELS, Red, Green, Blue);
+        Serial.println(buffer);
         for(int i=0; i < (strip.numPixels()); i++){
              strip.setPixelColor(i, strip.Color(Red, Green, Blue));
              }
@@ -254,13 +257,15 @@ void loop() {
     static bool isLEDOn = false;
     
     // tiemr statics for measuring time since last action
-    static unsigned long previousLedUpdateMillis = 0;
+    static unsigned long previousLedUpdatedMillis = 0;
     static unsigned long previousTransmitMillis = 0;
     static unsigned long previousColorUpdateMillis = 0;
     const unsigned long transmitPeriodMs = 100; 
+    const unsigned long pickNewColorPeriodMs = 60*1000; // 60s 
+
 
     // led timeout for when we don't recieve a packet, meaning the braodcast controller is OFF, or we missed 10 packets
-    const unsigned long ledUpdatePeriodMs = (transmitPeriodMs * 10); // 1s
+    const unsigned long ledUpdatePeriodMs = 1000; // 1s
 
     // Start broadcasting with LED color Red
     static int sendRed = 200; 
@@ -276,22 +281,23 @@ void loop() {
     /***********************************************************************/
     // If we haven't received a packet and updated the LEDs in a while, turn off the LEDs
     /***********************************************************************/
-    if (currentMillis - previousLedUpdateMillis >= ledUpdatePeriodMs){
+    if (currentMillis - previousLedUpdatedMillis > ledUpdatePeriodMs){
         // update the previous time record
-        previousLedUpdateMillis = currentMillis;
+        
 
         // Since we didn't get any packets, setting LEDs OFF
-        sendRed = 0; sendGreen = 0; sendBlue = 0;
+        int Red = 0, Green = 0, Blue = 0;
         
         char buffer[255];
         
         digitalWrite(LED_PIN, isLEDOn);
         isLEDOn = !isLEDOn;
 
-        sprintf(buffer, "Turning LED OFF: %d %d %d", sendRed, sendGreen, sendBlue);
+        sprintf(buffer, "Turning LED OFF: %d %d %d", Red, Green, Blue);
         Serial.println((char*)buffer);
         
-        xMasUpdateColor(sendRed, sendGreen, sendBlue);
+        xMasUpdateColor(Red, Green, Blue);
+        previousLedUpdatedMillis = currentMillis;
 
     }
     
@@ -329,10 +335,12 @@ void loop() {
                     requestedRed = tempRed;
                     requestedGreen = tempGreen;
                     requestedBlue = tempBlue;
-
-                    previousLedUpdateMillis = currentMillis;
                     
                     sprintf(buffer, "Got req: %d %d %d Rssi: %d", requestedRed, requestedGreen, requestedBlue, lastRssi);
+                    // Update the LEDs based on what we received
+                   xMasUpdateColor(requestedRed, requestedGreen, requestedBlue);
+                   previousLedUpdatedMillis = currentMillis;
+                   
                 }
                 else {
                     Serial.println("Bad packet");
@@ -345,10 +353,6 @@ void loop() {
             Serial.println(buffer);
             lastRssi = -100;
         }  // end else recv packet
-
-        // Update the LEDs based on what we received
-        xMasUpdateColor(requestedRed, requestedGreen, requestedBlue);
-
     } // end rf69 packet available
 
 
@@ -367,8 +371,7 @@ void loop() {
         char buffer[255];
         
         // Make a selection for the color we want to send if it's been a minute since we last changed
-        const unsigned long updateColorPeriodMs = 60*1000; // 60s 
-        if ((currentMillis - previousColorUpdateMillis >= updateColorPeriodMs) || (previousColorUpdateMillis == 0 )) {
+        if ((currentMillis - previousColorUpdateMillis >= pickNewColorPeriodMs) || (previousColorUpdateMillis == 0 )) {
             Serial.println("Picking a new random color");
             previousColorUpdateMillis = currentMillis;
 
@@ -399,11 +402,11 @@ void loop() {
                     sendRed = 100, sendGreen = 0, sendBlue = 200;
                     break;
             }
-            //update the local LEDs if they exist
-            xMasUpdateColor(sendRed, sendGreen, sendBlue);
-            previousLedUpdateMillis = currentMillis;
-        }
 
+        }
+        //update the local LEDs if they exist
+        xMasUpdateColor(sendRed, sendGreen, sendBlue);
+        previousLedUpdatedMillis = currentMillis;
 
         // Broadcast the color we want
         sprintf(radiopacket, "%d %d %d", sendRed, sendGreen, sendBlue);
