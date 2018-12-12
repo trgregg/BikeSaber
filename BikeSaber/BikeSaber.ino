@@ -235,7 +235,7 @@ void xMasUpdateColor(uint8_t Red, uint8_t Green, uint8_t Blue) {
              strip.setPixelColor(i, strip.Color(Red, Green, Blue));
              }
         strip.show();
-        delay(25);
+        delay(100);
 }
 
 
@@ -277,21 +277,24 @@ void loop() {
 
     // current time info
     unsigned long currentMillis = millis();
+
+    // Slave mode (no transmit)
+    const int slaveMode = 1;
+
+    digitalWrite(LED_PIN, isLEDOn);
+    isLEDOn = !isLEDOn;
        
     /***********************************************************************/
     // If we haven't received a packet and updated the LEDs in a while, turn off the LEDs
     /***********************************************************************/
     if (currentMillis - previousLedUpdatedMillis > ledUpdatePeriodMs){
         // update the previous time record
-        
+    
 
         // Since we didn't get any packets, setting LEDs OFF
         int Red = 0, Green = 0, Blue = 0;
         
         char buffer[255];
-        
-        digitalWrite(LED_PIN, isLEDOn);
-        isLEDOn = !isLEDOn;
 
         sprintf(buffer, "Turning LED OFF: %d %d %d", Red, Green, Blue);
         Serial.println((char*)buffer);
@@ -365,7 +368,7 @@ void loop() {
     // Comment out this transmit for slave units for Xmas Lights
     /***********************************************************************/
     
-    if ((currentMillis - previousTransmitMillis >= transmitPeriodMs) || (previousTransmitMillis == 0)) {
+    if ((currentMillis - previousTransmitMillis >= transmitPeriodMs) || (previousTransmitMillis == 0) && slaveMode == 0) {
         previousTransmitMillis = currentMillis;
         char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
         char buffer[255];
