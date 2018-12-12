@@ -157,7 +157,8 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 155
+//#define NUMPIXELS 155
+#define NUMPIXELS 10
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -259,7 +260,7 @@ void loop() {
     const unsigned long transmitPeriodMs = 100; 
 
     // led timeout for when we don't recieve a packet, meaning the braodcast controller is OFF, or we missed 10 packets
-    const unsigned long ledUpdatePeriodMs = transmitPeriodMs * 10;
+    const unsigned long ledUpdatePeriodMs = (transmitPeriodMs * 10); // 1s
 
     // Start broadcasting with LED color Red
     static int sendRed = 200; 
@@ -287,7 +288,7 @@ void loop() {
         digitalWrite(LED_PIN, isLEDOn);
         isLEDOn = !isLEDOn;
 
-        sprintf(buffer, "%ld: Color: %d %d %d", sendRed, sendGreen, sendBlue);
+        sprintf(buffer, "Turning LED OFF: %d %d %d", sendRed, sendGreen, sendBlue);
         Serial.println((char*)buffer);
         
         xMasUpdateColor(sendRed, sendGreen, sendBlue);
@@ -360,18 +361,22 @@ void loop() {
     // Comment out this transmit for slave units for Xmas Lights
     /***********************************************************************/
     
-    if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
+    if ((currentMillis - previousTransmitMillis >= transmitPeriodMs) || (previousTransmitMillis == 0)) {
         previousTransmitMillis = currentMillis;
         char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
         char buffer[255];
         
         // Make a selection for the color we want to send if it's been a minute since we last changed
         const unsigned long updateColorPeriodMs = 60*1000; // 60s 
-        if (currentMillis - previousColorUpdateMillis >= updateColorPeriodMs){
+        if ((currentMillis - previousColorUpdateMillis >= updateColorPeriodMs) || (previousColorUpdateMillis == 0 )) {
+            Serial.println("Picking a new random color");
             previousColorUpdateMillis = currentMillis;
 
             // Pick a RGB color to send to listeners
             int pickColor = (uint8_t)random(1, 5); //min inclusive, max exclusive
+            sprintf(buffer, "Choosing Color Case: %d", pickColor);
+            Serial.println(buffer);
+
             
             switch(pickColor){
                 default:
@@ -380,22 +385,30 @@ void loop() {
                 // Xmas lights
                 case 0: // black/off color wipe
                     sendRed = 0, sendGreen = 0, sendBlue = 0; // OFF
+                    break;
                 case 1: // xMas Red mode
                     sendRed = 200, sendGreen = 0, sendBlue = 0;
+                    break;
                 case 2: // xMas Green mode
                    sendRed = 25, sendGreen = 250, sendBlue = 0;
+                   break;
                 case 3: // xMas White mode
                     sendRed = 200, sendGreen = 100, sendBlue = 200;
+                    break;
                 case 4: // xMas Blue mode
                     sendRed = 100, sendGreen = 0, sendBlue = 200;
+                    break;
             }
+            //update the local LEDs if they exist
+            xMasUpdateColor(sendRed, sendGreen, sendBlue);
+            previousLedUpdateMillis = currentMillis;
         }
 
 
         // Broadcast the color we want
         sprintf(radiopacket, "%d %d %d", sendRed, sendGreen, sendBlue);
         
-        sprintf(buffer, "Sending prg:%d pri:%d pack:\"%s\" len: %d", sendRed, sendGreen, sendBlue, radiopacket, strlen(radiopacket));
+        sprintf(buffer, "Sending red:%d green:%d blue:%d", sendRed, sendGreen, sendBlue);
         Serial.println(buffer);
 
         // Send a message!
