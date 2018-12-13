@@ -114,7 +114,7 @@
 #define RFM69_INT     3
 #define RFM69_RST     4
 #define LED           13
-#define ANALOG1            A1
+#define ANALOG1       A1
 #endif
 
 #if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
@@ -378,10 +378,10 @@ void loop() {
 
         // Read analog input which should return 0-1024
         analogInput1 = analogRead(ANALOG1);
-        int knobPosition = analogInput1 / 4 - 1; // Divide by 4 to get range of 1024 -> 256
-
+        int knobPosition = analogInput1 / 4; // Divide by 4 to get range of 1024 -> 256
+        
         // if the analog input isn't turned all the way down, get the value and tranlate it to a number to look up RGB on a color wheel
-        if (knobPosition > 10) {
+        if (knobPosition > 5 && knobPosition < 250) {
             char buffer[255];
             sprintf(buffer, "Knob position: %d", knobPosition);
             Serial.println(buffer);
@@ -389,7 +389,7 @@ void loop() {
             // Make a RGB color based on KnobPositon
             // Largely stolen from "Wheel" color picker function
             // should return RGB
-//            knobPosition = 255 - knobPosition;
+
             if (knobPosition < 85) {
                 sendRed = 255 - knobPosition * 3;
                 sendGreen = 0;
@@ -408,6 +408,14 @@ void loop() {
                 sendBlue = 0;
             }
         }
+
+        else if (knobPosition > 249 ) {
+            sendRed = 0;
+            sendGreen = 0;
+            sendBlue = 0;
+        }
+
+
 
         else {
         
