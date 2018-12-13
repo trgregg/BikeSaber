@@ -114,6 +114,7 @@
 #define RFM69_INT     3
 #define RFM69_RST     4
 #define LED           13
+#define ANALOG1            A1
 #endif
 
 #if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
@@ -235,7 +236,7 @@ void xMasUpdateColor(uint8_t Red, uint8_t Green, uint8_t Blue) {
              strip.setPixelColor(i, strip.Color(Red, Green, Blue));
              }
         strip.show();
-        delay(100);
+        delay(50);
 }
 
 
@@ -263,6 +264,8 @@ void loop() {
     const unsigned long transmitPeriodMs = 100; 
     const unsigned long pickNewColorPeriodMs = 60*1000; // 60s 
 
+    // Setup analog input to get manual color selection
+    static int analogInput1 = 0;
 
     // led timeout for when we don't recieve a packet, meaning the braodcast controller is OFF, or we missed 10 packets
     const unsigned long ledUpdatePeriodMs = 1000; // 1s
@@ -279,7 +282,7 @@ void loop() {
     unsigned long currentMillis = millis();
 
     // Slave mode (no transmit)
-    const int slaveMode = 1;
+    const int slaveMode = 0;
 
     digitalWrite(LED_PIN, isLEDOn);
     isLEDOn = !isLEDOn;
@@ -368,45 +371,80 @@ void loop() {
     // Comment out this transmit for slave units for Xmas Lights
     /***********************************************************************/
     
-    if ((currentMillis - previousTransmitMillis >= transmitPeriodMs) || (previousTransmitMillis == 0) && slaveMode == 0) {
+    if (((currentMillis - previousTransmitMillis >= transmitPeriodMs) || (previousTransmitMillis == 0)) && slaveMode == 0) {
         previousTransmitMillis = currentMillis;
         char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
         char buffer[255];
-        
-        // Make a selection for the color we want to send if it's been a minute since we last changed
-        if ((currentMillis - previousColorUpdateMillis >= pickNewColorPeriodMs) || (previousColorUpdateMillis == 0 )) {
-            Serial.println("Picking a new random color");
-            previousColorUpdateMillis = currentMillis;
 
-            // Pick a RGB color to send to listeners
-            int pickColor = (uint8_t)random(1, 5); //min inclusive, max exclusive
-            sprintf(buffer, "Choosing Color Case: %d", pickColor);
+        // Read analog input which should return 0-1024
+        analogInput1 = analogRead(ANALOG1);
+        int knobPosition = analogInput1 / 4 - 1; // Divide by 4 to get range of 1024 -> 256
+
+        // if the analog input isn't turned all the way down, get the value and tranlate it to a number to look up RGB on a color wheel
+        if (knobPosition > 10) {
+            char buffer[255];
+            sprintf(buffer, "Knob position: %d", knobPosition);
             Serial.println(buffer);
 
-            
-            switch(pickColor){
-                default:
-                    Serial.println("Defaulting to OFF");
-                    // fall through to use 0 as default
-                // Xmas lights
-                case 0: // black/off color wipe
-                    sendRed = 0, sendGreen = 0, sendBlue = 0; // OFF
-                    break;
-                case 1: // xMas Red mode
-                    sendRed = 200, sendGreen = 0, sendBlue = 0;
-                    break;
-                case 2: // xMas Green mode
-                   sendRed = 25, sendGreen = 250, sendBlue = 0;
-                   break;
-                case 3: // xMas White mode
-                    sendRed = 200, sendGreen = 100, sendBlue = 200;
-                    break;
-                case 4: // xMas Blue mode
-                    sendRed = 100, sendGreen = 0, sendBlue = 200;
-                    break;
+            // Make a RGB color based on KnobPositon
+            // Largely stolen from "Wheel" color picker function
+            // should return RGB
+//            knobPosition = 255 - knobPosition;
+            if (knobPosition < 85) {
+                sendRed = 255 - knobPosition * 3;
+                sendGreen = 0;
+                sendBlue = knobPosition * 3;
             }
-
+            else if (knobPosition < 170) {
+                knobPosition -= 85;
+                sendRed = 0;
+                sendGreen = knobPosition * 3;
+                sendBlue = 255 - knobPosition * 3;
+            }
+            else {
+                knobPosition -= 170;
+                sendRed = knobPosition * 3;
+                sendGreen = 255 - knobPosition * 3;
+                sendBlue = 0;
+            }
         }
+
+        else {
+        
+            // Make a selection for the color we want to send if it's been a minute since we last changed
+            if ((currentMillis - previousColorUpdateMillis >= pickNewColorPeriodMs) || (previousColorUpdateMillis == 0 )) {
+                Serial.println("Picking a new random color");
+                previousColorUpdateMillis = currentMillis;
+               
+                // Pick a RGB color to send to listeners
+                int pickColor = (uint8_t)random(1, 5); //min inclusive, max exclusive
+                sprintf(buffer, "Choosing Color Case: %d", pickColor);
+                Serial.println(buffer);
+                
+                switch(pickColor){
+                    default:
+                        Serial.println("Defaulting to OFF");
+                        // fall through to use 0 as default
+                    // Xmas lights
+                    case 0: // black/off color wipe
+                        sendRed = 0, sendGreen = 0, sendBlue = 0; // OFF
+                        break;
+                    case 1: // xMas Red mode
+                        sendRed = 200, sendGreen = 0, sendBlue = 0;
+                        break;
+                    case 2: // xMas Green mode
+                       sendRed = 25, sendGreen = 250, sendBlue = 0;
+                       break;
+                    case 3: // xMas White mode
+                        sendRed = 200, sendGreen = 100, sendBlue = 200;
+                        break;
+                    case 4: // xMas Blue mode
+                        sendRed = 100, sendGreen = 0, sendBlue = 200;
+                        break;
+                } // end switch
+            } // end auto random color picker
+        } // end if-else for color update
+        
         //update the local LEDs if they exist
         xMasUpdateColor(sendRed, sendGreen, sendBlue);
         previousLedUpdatedMillis = currentMillis;
