@@ -282,7 +282,7 @@ void loop() {
     unsigned long currentMillis = millis();
 
     // Slave mode (no transmit)
-    const int slaveMode = 0;
+    const int slaveMode = 1;
 
     digitalWrite(LED_PIN, isLEDOn);
     isLEDOn = !isLEDOn;
@@ -438,7 +438,7 @@ void loop() {
                         sendRed = 0, sendGreen = 0, sendBlue = 0; // OFF
                         break;
                     case 1: // xMas Red mode
-                        sendRed = 200, sendGreen = 0, sendBlue = 0;
+                        sendRed = 250, sendGreen = 0, sendBlue = 0;
                         break;
                     case 2: // xMas Green mode
                        sendRed = 25, sendGreen = 250, sendBlue = 0;
@@ -447,7 +447,7 @@ void loop() {
                         sendRed = 200, sendGreen = 100, sendBlue = 200;
                         break;
                     case 4: // xMas Blue mode
-                        sendRed = 100, sendGreen = 0, sendBlue = 200;
+                        sendRed = 100, sendGreen = 0, sendBlue = 250;
                         break;
                 } // end switch
             } // end auto random color picker
