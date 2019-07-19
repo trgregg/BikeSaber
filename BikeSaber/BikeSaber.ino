@@ -84,7 +84,7 @@
 
 
 // Define variables and constants
-
+int lessLight = 1;
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -101,54 +101,13 @@
 // Add setup code
 #define RF69_FREQ 915.0
 
-#if defined (__AVR_ATmega32U4__) // Feather 32u4 w/Radio
-#define RFM69_CS      8
-#define RFM69_INT     7
-#define RFM69_RST     4
-#define LED           13
-#endif
 
-#if defined(ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
+//#if defined (ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
 #define RFM69_CS      8
 #define RFM69_INT     3
 #define RFM69_RST     4
 #define LED           13
-#endif
-
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
-#define RFM69_INT     3  //
-#define RFM69_CS      4  //
-#define RFM69_RST     2  // "A"
-#define LED           13
-#endif
-
-#if defined(ESP8266)    // ESP8266 feather w/wing
-#define RFM69_CS      2    // "E"
-#define RFM69_IRQ     15   // "B"
-#define RFM69_RST     16   // "D"
-#define LED           0
-#endif
-
-#if defined(ESP32)    // ESP32 feather w/wing
-#define RFM69_RST     13   // same as LED
-#define RFM69_CS      33   // "B"
-#define RFM69_INT     27   // "A"
-#define LED           13
-#endif
-
-/* Teensy 3.x w/wing
- #define RFM69_RST     9   // "A"
- #define RFM69_CS      10   // "B"
- #define RFM69_IRQ     4    // "C"
- #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ )
- */
-
-/* WICED Feather w/wing
- #define RFM69_RST     PA4     // "A"
- #define RFM69_CS      PB4     // "B"
- #define RFM69_IRQ     PA15    // "C"
- #define RFM69_IRQN    RFM69_IRQ
- */
+//#endif
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
@@ -309,14 +268,14 @@ void setup()
 uint32_t Wheel(byte WheelPos) {
     WheelPos = 255 - WheelPos;
     if(WheelPos < 85) {
-        return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+        return strip.Color(200 - WheelPos * 3, 0, WheelPos * 3);
     }
     if(WheelPos < 170) {
         WheelPos -= 85;
-        return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+        return strip.Color(0, WheelPos * 3, 200 - WheelPos * 3);
     }
     WheelPos -= 170;
-    return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+    return strip.Color(WheelPos * 3, 200 - WheelPos * 3, 0);
 }
 
 
@@ -328,7 +287,7 @@ void colorWipe(uint32_t c) {
     strip.show();
     colorWipecurrentPixel++;
     if(colorWipecurrentPixel >= strip.numPixels()+100){
-        // we've filled the strip with c, no turn it all off and start back at pixel 0
+        // we've filled the strip with c, now turn it all off and start back at pixel 0
         for(int i=0; i < (strip.numPixels()); i++){
           strip.setPixelColor(i, strip.Color(0, 0, 0));
         }
@@ -413,8 +372,8 @@ void rainbow() {
 //        strip.show();
 //    }
 
-    for(uint16_t i=0; i<strip.numPixels(); i=i+2) {
-        strip.setPixelColor(i-1, 0);    //turn off every other pixel
+    for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
+        if ( lessLight ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
 
     }
@@ -432,8 +391,8 @@ void rainbowCycle() {
 //        strip.show();
 //    }
 
-    for(uint16_t i=0; i< strip.numPixels(); i=i+2) {
-        strip.setPixelColor(i-1, 0);    //turn off every other pixel
+    for(uint16_t i=0; i< strip.numPixels(); i=i+1) {
+        if ( lessLight ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
     }
 
@@ -543,7 +502,7 @@ void loop() {
     
     // led program controls
     const uint8_t numLedPrograms = 12; // max case id, not count
-    const uint8_t defaultLedProgram = 12;
+    const uint8_t defaultLedProgram = 4;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
