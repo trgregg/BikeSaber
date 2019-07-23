@@ -115,7 +115,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 155
+#define NUMPIXELS 100
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -260,7 +260,7 @@ int policeChina2PreviousColor = 0;
 void policeChinaMode2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
 
     if(policeChina2PreviousColor == 0) { 
-          uint32_t strobeColor = strip.Color(0, 255, 0);  // flash red
+          uint32_t strobeColor = strip.Color(0, 200, 0);  // flash red
           for(int j = 0; j < StrobeCount; j++) {
               strip.fill(strobeColor,0, NUMPIXELS);
               strip.show();
@@ -416,8 +416,7 @@ void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTra
 	strip.clear();
 	strip.show();
   
-  
-   for(int i = strip.numPixels() + strip.numPixels(); i > 0; --i) {
+   for(int i = strip.numPixels() + (strip.numPixels()/2) ; i > 0; --i) {
     
     
     // fade brightness all LEDs one step
@@ -560,19 +559,41 @@ void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
 }
 
 //################
+//  SparkleDecay(255, 255, 255, 0, 10);
+
+void SparkleDecay(int red, int green, int blue, int FadeDelay, int SpeedDelay) {
+
+    int Pixel = random(strip.numPixels());
+    strip.setPixelColor(Pixel,red,green,blue);
+    strip.setPixelColor(Pixel+1,red,green,blue);
+    strip.show();
+    
+    // fade out.
+    for(int j=0; j< 100; j++) {
+      delay(FadeDelay);
+      fadeToBlack(Pixel, j );
+      fadeToBlack(Pixel+1, j );
+      strip.show();
+    }
+    
+    strip.clear();
+    strip.show();
+    delay(SpeedDelay);
+}
+
+//################
 //  Sparkle(255, 255, 255, 0, 10);
 
 void Sparkle(byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay) {
     for (int i = 0; i < SparksPerFlash; i++) {
       int Pixel = random(strip.numPixels());
+      setPixel(Pixel-1,red,green,blue);
       setPixel(Pixel,red,green,blue);
-      setPixel((Pixel+1),red,green,blue);
+      setPixel(Pixel+1,red,green,blue);
       strip.show();
     }
     delay(SparkleDelay);
   
-//    setPixel(Pixel,0,0,0);
-//    setPixel((Pixel),0,0,0);
     strip.clear();
     strip.show();
     delay(SpeedDelay);
@@ -596,7 +617,7 @@ void loop() {
     
     // led program controls
     const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 19;
+    const uint8_t defaultLedProgram = 18;
     const uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
@@ -743,18 +764,18 @@ void loop() {
            
             case 14: // color wipe random color and back to black
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack ((random(0,200)),(random(0,200)),(random(0,200)), 2);  // random color 
+                colorWipeAndBlack ((random(0,200)),(random(0,100)),(random(0,200)), 2);  // random color 
                 colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
                 
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
                 ledUpdatePeriodMs = 1;
-                meteorRain(255,255,255, 10, 64, true, 5);
+                meteorRain(100,255,200, 10, 50, true, 10);
                 break;
                 
             case 16:  // Strobe! variables: byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause
                 ledUpdatePeriodMs = 1;
-                Strobe(255,255,255, 10, 25, 250);
+                Strobe(150,100,200, 5, 25, 200);
                 break;
                 
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
@@ -769,12 +790,17 @@ void loop() {
                 
             case 19: // Sparkle variables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
-                Sparkle(255, 255, 255, 3, 10, 5);
+                Sparkle(255, 255, 255, 3, 5, 5);
                 break;
- 
-            case 20: // Sparkle variables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
+             case 20: // Sparkle slow ariables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
-                Sparkle(255, 255, 255, 2, 50, 50);
+                Sparkle(150, 150, 150, 3, 10, 100);
+                break;
+                
+            case 21: // SparkleDelay variables: byte red, byte green, byte blue, int FadeDelay, int SpeedDelay
+                ledUpdatePeriodMs = 0;
+                //SparkleDecay(255, 255, 255, 5, 0);
+                SparkleDecay((random(0,200)),(random(0,100)),(random(0,200)), 5, 0);
                 break;
         }
         
@@ -860,7 +886,7 @@ void loop() {
                                                       
                 sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
                 
-                sprintf(buffer, "%ld: Sending prg:%d pri:%d pack:\"%s\" len: %d Previous Transmit: %d ms", currentMillis, requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket), (currentMillis - previousTransmitMillis));
+                sprintf(buffer, "%ld: Sending prg:%d pri:%d pack:\"%s\" len: %d Previous Transmit: %d ms (%d late)", currentMillis, requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket), (currentMillis - previousTransmitMillis), ((currentMillis - previousTransmitMillis) - transmitPeriodMs ));
                 Serial.println(buffer);
         
                 // Send a message!
@@ -870,7 +896,7 @@ void loop() {
                   char buffer[255];
 
                   // If testing with just one unit, move to the next program so we can see more.
-                  sprintf(buffer, "%ld: Not transmitting because transmitMode != 1, Previous Transmit: %d ms", currentMillis, (currentMillis - previousTransmitMillis));
+                  sprintf(buffer, "%ld: Not transmitting because transmitMode != 1, Previous Transmit: %d ms (%d late)", currentMillis, (currentMillis - previousTransmitMillis), ((currentMillis - previousTransmitMillis) - transmitPeriodMs ));
                   Serial.println(buffer);
 
 
