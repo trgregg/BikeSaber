@@ -562,18 +562,20 @@ void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
 //################
 //  Sparkle(255, 255, 255, 0, 10);
 
-void Sparkle(byte red, byte green, byte blue, int SparkleDelay, int SpeedDelay) {
-  int Pixel = random(strip.numPixels());
-  setPixel(Pixel,red,green,blue);
-  setPixel((Pixel+1),red,green,blue);
-  strip.show();
-  delay(SparkleDelay);
-
-  setPixel(Pixel,0,0,0);
-  setPixel((Pixel+1),0,0,0);
-  strip.show();
-  delay(SpeedDelay);
-
+void Sparkle(byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay) {
+    for (int i = 0; i < SparksPerFlash; i++) {
+      int Pixel = random(strip.numPixels());
+      setPixel(Pixel,red,green,blue);
+      setPixel((Pixel+1),red,green,blue);
+      strip.show();
+    }
+    delay(SparkleDelay);
+  
+//    setPixel(Pixel,0,0,0);
+//    setPixel((Pixel),0,0,0);
+    strip.clear();
+    strip.show();
+    delay(SpeedDelay);
 }
 
 
@@ -594,12 +596,11 @@ void loop() {
     
     // led program controls
     const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 4;
+    const uint8_t defaultLedProgram = 19;
     const uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
-    char comment[100] = "";
     static int16_t currentProgramPrioity = 50+50;
     static int16_t previousProgramPrioity = 0;
     static int8_t requestedProgramPrioity = 0;
@@ -610,7 +611,7 @@ void loop() {
     // Program priority update
     /***********************************************************************/
     const unsigned long priorityDecrementPeriodMs = 100;  // decrement the priority every X milliseconds. 100 means decrement the priority every 10ms.
-    const unsigned long minimumProgramTimeMs = 5000;  // Run the current program for atleast 2secs before looking for new program
+    const unsigned long minimumProgramTimeMs = 10000;  // Run the current program for atleast 2secs before looking for new program
     if(currentMillis - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
 //        currentProgramPrioity = currentProgramPrioity == 0 ? 0 : --currentProgramPrioity;
           previousProgramPrioity = currentProgramPrioity;
@@ -766,14 +767,14 @@ void loop() {
                 RunningLights(0,150,150, 10);
                 break;
                 
-            case 19: // Sparkle variables: byte red, byte green, byte blue, int SparkleDelay, int SpeedDelay
+            case 19: // Sparkle variables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
-                Sparkle(255, 255, 255, 10, 5);
+                Sparkle(255, 255, 255, 3, 10, 5);
                 break;
  
-            case 20: // Sparkle variables: byte red, byte green, byte blue, int SpeedDelay
+            case 20: // Sparkle variables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
-                Sparkle(255, 255, 255, 50, 500);
+                Sparkle(255, 255, 255, 2, 50, 50);
                 break;
         }
         
