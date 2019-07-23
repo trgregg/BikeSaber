@@ -86,18 +86,14 @@
 // Define variables and constants
 int lessLight = 0;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
 int transmitMode = 0;  // use this for BikeSabers that we only want to recieve, but not vote.
-
 int testMode = 1;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
-
+int shortString = 0;   // Allows a quick way to change to a short string, like that used on the bike wheels. Parameters changed: NUMPIXELS, lessLight, transmitMode
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
 
 
-// Utilities
-
-
-// Functions
+// Setup
 
 // ***************************************************************************
 // Stuff for RFM69
@@ -186,7 +182,7 @@ void setup()
     
 }
 
-
+// Utilities
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -203,6 +199,19 @@ uint32_t Wheel(byte WheelPos) {
     return strip.Color(WheelPos * 3, 200 - WheelPos * 3, 0);
 }
 
+void setAll(byte red, byte green, byte blue) {  // This utility makes it easier to set all pixels to a color
+  for(int i = 0; i < strip.numPixels(); i++ ) {
+    setPixel(i, red, green, blue); 
+  }
+   strip.show();
+}
+
+void setPixel(int Pixel, byte red, byte green, byte blue) {  // This utility makes it easier to set a pixel to color provided RGB
+   strip.setPixelColor(Pixel, strip.Color(red, green, blue));
+}
+
+
+// Functions
 
 // Fill the dots one after the other with a color
 uint16_t colorWipecurrentPixel = 0;
@@ -246,92 +255,6 @@ void policeMode(uint8_t wait) {
      }
 }
 
-
-// China flashing Red-Blue on the full string
-int policeChinaPreviousColor = 0;
-void policeChinaMode(uint8_t wait) {
-
-        // red color wipe
-        if(policeChinaPreviousColor == 0 || policeChinaPreviousColor == 2){
-            policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 200, 0));
-                 }
-            strip.show();
-            delay(wait);
-        }
-        
-        // off wipe
-        if(policeChinaPreviousColor == 1 || 
-        policeChinaPreviousColor == 3 || policeChinaPreviousColor == 4 || policeChinaPreviousColor == 5 || 
-        policeChinaPreviousColor == 7 || 
-        policeChinaPreviousColor == 9 || policeChinaPreviousColor == 10 || policeChinaPreviousColor == 11){
-        policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 0));
-                }
-            strip.show();
-            delay(wait*4);
-        }
-
-        // blue color wipe
-        if(policeChinaPreviousColor == 6 || policeChinaPreviousColor == 8){
-            policeChinaPreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 200));
-                }
-            strip.show();
-            delay(wait);
-        }
-        
-        // reset 
-        if( policeChinaPreviousColor == 12) {policeChinaPreviousColor=0;}
-       
-}
-
-// China flashing Red-Blue on the half string
-int policeChinaHalfPreviousColor = 0;
-void policeChinaModeHalf(uint8_t wait) {
-        
-        int NUMPIXELS_HALF = (strip.numPixels() / 2);
-        
-        // red color wipe
-        if(policeChinaHalfPreviousColor == 0 || policeChinaHalfPreviousColor == 2){
-            policeChinaHalfPreviousColor++;
-            for(int i=0; i < NUMPIXELS_HALF; i++){  
-                 strip.setPixelColor(i, strip.Color(0, 255, 0));
-            }
-            strip.show();
-            delay(wait);
-        }
-        
-        // off wipe
-        if(policeChinaHalfPreviousColor == 1 || 
-        policeChinaHalfPreviousColor == 3 || policeChinaHalfPreviousColor == 4 || policeChinaHalfPreviousColor == 5 || 
-        policeChinaHalfPreviousColor == 7 || 
-        policeChinaHalfPreviousColor == 9 || policeChinaHalfPreviousColor == 10 || policeChinaHalfPreviousColor == 11){
-        policeChinaHalfPreviousColor++;
-            for(int i=0; i < strip.numPixels(); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 0));
-            }
-            strip.show();
-            delay(wait*4);
-        }
-
-        // blue color wipe
-        if(policeChinaHalfPreviousColor == 6 || policeChinaHalfPreviousColor == 8){
-            policeChinaHalfPreviousColor++;
-            for(int i=NUMPIXELS_HALF; i < strip.numPixels(); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 255));
-            }
-            strip.show();
-            delay(wait);
-        }
-        
-        // reset 
-        if( policeChinaHalfPreviousColor == 12) {policeChinaHalfPreviousColor=0;}
-       
-}
 
 int policeChina2PreviousColor = 0;
 void policeChinaMode2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
@@ -399,14 +322,6 @@ void policeChinaModeHalf2(int StrobeCount, int FlashDelay, int EndPause) { // in
 
 uint16_t rainbowColorMotion = 0;
 void rainbow( int wait ) {
-    
-//    for(j=0; j<256; j++) {
-//        for(i=0; i<strip.numPixels(); i++) {
-//            strip.setPixelColor(i, Wheel((i+j) & 255));
-//        }
-//        strip.show();
-//    }
-
     for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
         if ( lessLight ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
@@ -420,13 +335,6 @@ void rainbow( int wait ) {
 
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle(int wait) {
-//    for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-//        for(uint16_t i=0; i< strip.numPixels(); i++) {
-//            strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
-//        }
-//        strip.show();
-//    }
-
     for(uint16_t i=0; i< strip.numPixels(); i=i+1) {
         if ( lessLight ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
@@ -442,20 +350,6 @@ void rainbowCycle(int wait) {
 
 //Theatre-style crawling lights.
 void theaterChase(uint32_t c, int wait) {
-//    for (int j=0; j<1; j++) {  //do 1 cycles of chasing
-//        for (int q=0; q < 3; q++) {
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, c);    //turn every third pixel on
-//            }
-//            strip.show();
-//
-//            delay(20);
-//
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//            }
-//        }
-//    }
     static uint8_t q;
 
     for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
@@ -477,20 +371,6 @@ void theaterChase(uint32_t c, int wait) {
 
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait) {
-//    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-//        for (int q=0; q < 3; q++) {
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-//            }
-//            strip.show();
-//
-//            delay(wait);
-//
-//            for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//                strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//            }
-//        }
-//    }
     static uint8_t q;
     
     for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
@@ -523,7 +403,7 @@ void theaterChaseRainbow(uint8_t wait) {
 void colorWipeAndBlack(byte red, byte green, byte blue, int SpeedDelay) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       setPixel(i, red, green, blue);
-      showStrip();
+       strip.show();
       delay(SpeedDelay);
   }
 }
@@ -696,41 +576,12 @@ void Sparkle(byte red, byte green, byte blue, int SparkleDelay, int SpeedDelay) 
 
 }
 
-//#################
-void setAll(byte red, byte green, byte blue) {
-  for(int i = 0; i < strip.numPixels(); i++ ) {
-    setPixel(i, red, green, blue); 
-  }
-  showStrip();
-}
-
-
-void showStrip() {
-   strip.show();
-}
-
-void setPixel(int Pixel, byte red, byte green, byte blue) {
-   strip.setPixelColor(Pixel, strip.Color(red, green, blue));
-}
 
 //#####################################################
 
 
 void loop() {
-    // Some example procedures showing how to display to the pixels:
 
-//    colorWipe(strip.Color(0, 255, 0), 50); // Green
-//    colorWipe(strip.Color(0, 0, 255), 50); // Blue
-//
-//    // Send a theater pixel chase in...
-//    theaterChase(strip.Color(127, 127, 127), 50); // White
-//    theaterChase(strip.Color(127, 0, 0), 50); // Red
-//    theaterChase(strip.Color(0, 0, 127), 50); // Blue
-//
-//    rainbow(20);
-//    rainbowCycle(20);
-//    theaterChaseRainbow(50);
-    
     static bool isLEDOn = false;
     
     // tiemr statics for measuring time since last action
@@ -827,121 +678,100 @@ void loop() {
                 Serial.println("unknown LED program");
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
-//                comment = "Wipe Red";
                 ledUpdatePeriodMs = 0;
                 colorWipeAndBlack (0, 150, 0, 2); // Red
                 colorWipeAndBlack (0,0,0, 0); // wipe to black
 
                 break;
             case 1: // green color wipe
- //               comment = "Wipe Green";
                 ledUpdatePeriodMs = 0;
                 colorWipeAndBlack (150, 0, 0, 2); // Grean
                 colorWipeAndBlack (0,0,0, 0); // wipe to black
                 break;
             case 2: // blue color wipe
- //               comment = "Wipe Blue";
                 ledUpdatePeriodMs = 0;
                 colorWipeAndBlack (0, 0, 150, 2); // Blue
                 colorWipeAndBlack (0,0,0, 0); // wipe to black
                 break;
             case 3: // purple color wipe
- //               comment = "Wipe Puruple";
                 ledUpdatePeriodMs = 0;
                 colorWipeAndBlack (0, 75, 75, 2); // Purple
                 colorWipeAndBlack (0,0,0, 0); // wipe to black
                 break;
             case 4: // rainbow
- //               comment = "Rainbow";
                 ledUpdatePeriodMs = 10;
                 rainbow(10); // rainbow
                 break;
             case 5: // rainbowCycle
-//                comment = "Rainbox Cycle";
                 ledUpdatePeriodMs = 10;
                 rainbowCycle(10); // rainbowCyle: delay
                 break;
             case 6: // blue color chase
-//                comment = "Chase Blue";
                 ledUpdatePeriodMs = 10;
                 theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
                 break;
             case 7: // red color chase
-//                comment = "Chase Red";
                 ledUpdatePeriodMs = 10;
                 theaterChase(strip.Color(0, 255, 0), 50); // Chase red
                 break;
             case 8: // green color chase
-//                comment = "Chase Green";
                 ledUpdatePeriodMs = 10;
                 theaterChase(strip.Color(255, 0, 0), 50); // Chase green
                 break;
             case 9: // purple color chase
-//                comment = "Chase Purple";
                 ledUpdatePeriodMs = 10;
                 theaterChase(strip.Color(0, 75, 75), 50); // Chase purple
                 break;
             case 10: // color chase
-//                comment = "Chase Rainbow";
                 ledUpdatePeriodMs = 10;
                 theaterChaseRainbow(50); // Chase rainbow
                 break;
             case 11: // poice mode
-//                comment = "Police Mode";
                 ledUpdatePeriodMs = 1;
                 policeMode(100); // Police Mode variable: wait between switching colors
                 break;
             case 12: // china poice mode
-//                comment = "Police Mode China";
                 ledUpdatePeriodMs = 1;
                 policeChinaMode2(10,20,300); // china Police Mode variable: wait between switching colors
                 break;
            
             case 13: // china poice mode Half of the strip
-//                comment = "Police Mode China Half";
                 ledUpdatePeriodMs = 1;
                 policeChinaModeHalf2 (10, 20, 300); // china Police Mode Half and Half variable: // int StrobeCount, int FlashDelay, int EndPause)
                 break;
            
             case 14: // color wipe random color and back to black
-//                comment = "Wipe Random Color";
                 ledUpdatePeriodMs = 0;
                 colorWipeAndBlack ((random(0,200)),(random(0,200)),(random(0,200)), 2);  // random color 
                 colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
                 
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
-//                comment = "Meteor";
                 ledUpdatePeriodMs = 1;
                 meteorRain(255,255,255, 10, 64, true, 5);
                 break;
                 
             case 16:  // Strobe! variables: byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause
-//                comment = "Strobe";
                 ledUpdatePeriodMs = 1;
-                Strobe(0,100,255, 10, 25, 250);
+                Strobe(255,255,255, 10, 25, 250);
                 break;
                 
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-//                comment = "Fire";
                 ledUpdatePeriodMs = 0;
                 Fire(55,120,15);
                 break;
                 
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
-//                comment = "Running Lights";
                 ledUpdatePeriodMs = 10;
                 RunningLights(0,150,150, 10);
                 break;
                 
             case 19: // Sparkle variables: byte red, byte green, byte blue, int SparkleDelay, int SpeedDelay
-//                comment = "Sparkle";
                 ledUpdatePeriodMs = 0;
                 Sparkle(255, 255, 255, 10, 5);
                 break;
  
             case 20: // Sparkle variables: byte red, byte green, byte blue, int SpeedDelay
-//                comment = "Sparkle Slow";
                 ledUpdatePeriodMs = 0;
                 Sparkle(255, 255, 255, 50, 500);
                 break;
