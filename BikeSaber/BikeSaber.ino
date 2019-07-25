@@ -634,25 +634,26 @@ int movement = 0;
 void ReadAccel() {
   lis.read();      // get X Y and Z data at once
   // Then print out the raw data
-  if (testMode == 10) {
-      Serial.print("X:  "); Serial.print(lis.x); 
-      Serial.print("  \tY:  "); Serial.print(lis.y); 
-      Serial.print("  \tZ:  "); Serial.print(lis.z); 
+  if (testMode >= 2) {
+      Serial.print("X:  "); Serial.print(abs(lis.x)); 
+      Serial.print("  \tY:  "); Serial.print(abs(lis.y)); 
+      Serial.print("  \tZ:  "); Serial.print(abs(lis.z)); 
     
-    
-      /* Or....get a new sensor event, normalized */ 
-      sensors_event_t event; 
-      lis.getEvent(&event);
-      
-      /* Display the results (acceleration is measured in m/s^2) */
-      Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
-      Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
-      Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
-      Serial.println(" m/s^2 ");
+      if (testMode >= 3) {
+          /* Or....get a new sensor event, normalized */ 
+          sensors_event_t event; 
+          lis.getEvent(&event);
+          
+          /* Display the results (acceleration is measured in m/s^2) */
+          Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
+          Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
+          Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
+          Serial.print(" m/s^2 ");
+      }
     
       Serial.println();
   }
-  movement = (abs(lis.x) + abs(lis.y) + abs(lis.z));
+  movement = (abs(lis.x) + abs(lis.y) + abs(lis.z));  // normallize the movement such that sitting on a table is ~7600.
   
  }
 //#####################################################
@@ -673,7 +674,7 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = currentMillis;
-    static unsigned long MovementThreshold = 9000; // ~7600 is on a table.
+    static unsigned long MovementThreshold = 9000; // Movement is normallized such that sitting on a table ~7600
     static unsigned long AccelCheckPeriodMs = 250; // 100ms between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 10000; // how long to wait before giong to still program in ms
     static int notMovingCounter = 0;
@@ -764,7 +765,7 @@ void loop() {
             previousAccelCheckMillis = currentMillis;  // update the previous time record
 
             ReadAccel();  // get the current accel data
-            if ((movement < MovementThreshold) && (movement > 6000)) {  // looks like we aren't moving... and we have a functioning accel... start counting
+            if ((movement < MovementThreshold) && (movement > 0)) {  // looks like we aren't moving... and we have a functioning accel... start counting
                 notMovingCounter++;
                 char buffer[255];
                 
