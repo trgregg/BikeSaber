@@ -100,6 +100,7 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 const int lessLight = 1;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+static int useAccel = 1; // we will set this to 0 if we can't find accel
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -153,6 +154,8 @@ void setup()
     //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
      if (testMode >= 1) {while (!Serial);}     // will pause Zero, Leonardo, etc until serial console opens
 
+
+/////// Setup Radio RFM69
     pinMode(LED, OUTPUT);
     pinMode(RFM69_RST, OUTPUT);
     digitalWrite(RFM69_RST, LOW);
@@ -191,22 +194,23 @@ void setup()
     Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 
 
-    // setup accelerometer stuff
+///////// setup accelerometer stuff
     Serial.println("LIS3DH test!");
     
     if (! lis.begin(0x18)) {   // change this to 0x19 for alternative i2c address
-      Serial.println("Couldnt start");
-      while (1);
+      Serial.println("Couldnt start accel! Continuing without it.");
+      useAccel = 0;
+    } else {
+      Serial.println("LIS3DH found!");
+      
+      lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
+      
+      Serial.print("Range = "); Serial.print(2 << lis.getRange());  
+      Serial.println("G");
     }
-    Serial.println("LIS3DH found!");
-    
-    lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
-    
-    Serial.print("Range = "); Serial.print(2 << lis.getRange());  
-    Serial.println("G");
 
     
-    // Setup the NeoPixel string
+////// Setup the NeoPixel string
     strip.begin(); // This initializes the NeoPixel library.
     strip.show(); // start with everything off
     
@@ -763,7 +767,7 @@ void loop() {
         }
 
 // check Accel to see if we are moving
-        if (currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs){
+        if ((currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs) && (useAccel >= 1)){
             previousAccelCheckMillis = currentMillis;  // update the previous time record
 
             ReadAccel();  // get the current accel data
