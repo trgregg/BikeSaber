@@ -97,8 +97,9 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 
 // Define variables and constants
-const int lessLight = 0;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
-const int testMode = 1;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+const int lessLight = 1;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
+const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -229,7 +230,7 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 void setAll(byte red, byte green, byte blue) {  // This utility makes it easier to set all pixels to a color
-  for(int i = 0; i < strip.numPixels(); i++ ) {
+  for(int i = 0; i < strip.numPixels() + strip.numPixels(); i++ ) {
     setPixel(i, red, green, blue); 
   }
    strip.show();
@@ -432,7 +433,7 @@ void theaterChaseRainbow(uint8_t wait) {
 void colorWipeAndBlack(byte red, byte green, byte blue, int SpeedDelay) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       setPixel(i, red, green, blue);
-       strip.show();
+      strip.show();
       delay(SpeedDelay);
   }
 }
@@ -676,16 +677,19 @@ void loop() {
     static unsigned long previousAccelCheckMillis = currentMillis;
     static unsigned long MovementThreshold = 9000; // Movement is normallized such that sitting on a table ~7600
     static unsigned long AccelCheckPeriodMs = 250; // 100ms between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 10000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
     static int notMovingCounter = 0;
     static int StillProgram = 20; // pick a program to run when we are still
+
+    // Broadcast timing
+    const unsigned long transmitPeriodMs = 0.5*1000; // 1s
     
     // led program controls
     const unsigned long priorityDecrementPeriodMs = 100;  // decrement the priority every X milliseconds. 100 means decrement the priority every 10ms.
     const unsigned long minimumProgramTimeMs = 10000;  // Run the current program for atleast 2secs before looking for new program
     
     const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 5;
+    const uint8_t defaultLedProgram = 0;
     static uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
@@ -696,8 +700,6 @@ void loop() {
     static int8_t requestedProgramPrioity = 0;
     
     static unsigned long ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
-
-    const int transmitMode = 0;  // use this for BikeSabers that we only want to recieve, but not vote.
     
     /***********************************************************************/
     // Program priority update
@@ -796,24 +798,23 @@ void loop() {
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 150, 0, 2); // Red
-                colorWipeAndBlack (0,0,0, 0); // wipe to black
-
+                colorWipeAndBlack (0, 150, 0, 3); // Red
+                colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
             case 1: // green color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (150, 0, 0, 2); // Grean
-                colorWipeAndBlack (0,0,0, 0); // wipe to black
+                colorWipeAndBlack (150, 0, 0, 3); // Grean
+                colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
             case 2: // blue color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 0, 150, 2); // Blue
-                colorWipeAndBlack (0,0,0, 0); // wipe to black
+                colorWipeAndBlack (0, 0, 150, 3); // Blue
+                colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
             case 3: // purple color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 75, 75, 2); // Purple
-                colorWipeAndBlack (0,0,0, 0); // wipe to black
+                colorWipeAndBlack (0, 75, 75, 3); // Purple
+                colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
             case 4: // rainbow
                 ledUpdatePeriodMs = 10;
@@ -859,7 +860,7 @@ void loop() {
            
             case 14: // color wipe random color and back to black
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack ((random(0,200)),(random(0,100)),(random(0,200)), 2);  // random color 
+                colorWipeAndBlack ((random(0,200)),(random(0,100)),(random(0,200)), 3);  // random color 
                 colorWipeAndBlack (0,0,0, 1); // wipe to black
                 break;
                 
@@ -966,21 +967,33 @@ void loop() {
     // if this new priority is higher than the current priority, switch our
     // current program
     /***********************************************************************/
-    const unsigned long transmitPeriodMs = 1*1000; // 1s
       if (currentMillis - previousTransmitMillis >= transmitPeriodMs){
             char buffer[255];
 
             if (transmitMode == 1) {
 
                 char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
-                
+
                 // generate a random new program with random priority
                 requestedProgramPrioity = (int16_t)random(1, minimumProgramTimeMs / priorityDecrementPeriodMs);
                 requestedLedProgram = (uint8_t)random(0, numLedPrograms +1); //min inclusive, max exclusive
+                 
+                int broadcastPriority;
+                int broadcastProgram;
+
+                if (requestedProgramPrioity > currentProgramPrioity) { 
+                  // new priority is higher than current priority, so let's broadcast the new program
+                  broadcastPriority = requestedProgramPrioity;
+                  broadcastProgram = requestedLedProgram;
+                } else {
+                  // requested priority isn't higher than current program, so broadcast current program info to get other units in sync
+                  broadcastPriority = currentProgramPrioity - (minimumProgramTimeMs / priorityDecrementPeriodMs);  // sending current priorty minus the amount that a recipient would add. This should sync units very quickly. 
+                  broadcastProgram = currentLedProgram;
+                }
     
-                sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
+                sprintf(radiopacket, "%d %d", broadcastProgram, broadcastPriority);
                 
-                sprintf(buffer, "%ld: Sending prg:%d pri:%d pack:\"%s\" len: %d Previous Transmit: %d ms (%d late)", currentMillis, requestedLedProgram, requestedProgramPrioity, radiopacket, strlen(radiopacket), (currentMillis - previousTransmitMillis), ((currentMillis - previousTransmitMillis) - transmitPeriodMs ));
+                sprintf(buffer, "%ld: Sending prg:%d pri:%d pack:\"%s\" len: %d Previous Transmit: %d ms (%d late)", currentMillis, broadcastProgram, broadcastPriority, radiopacket, strlen(radiopacket), (currentMillis - previousTransmitMillis), ((currentMillis - previousTransmitMillis) - transmitPeriodMs ));
                 Serial.println(buffer);
         
                 // Send a message!
