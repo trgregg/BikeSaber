@@ -73,12 +73,22 @@
 #error Platform not defined
 #endif // end IDE
 
+
 // Set parameters
 
 
 // Include application, user and local libraries
 #include "RH_RF69.h"
 #include "Adafruit_NeoPixel.h"
+
+// Accelerometer 
+#include <Wire.h>
+#include <Adafruit_LIS3DH.h>
+#include <Adafruit_Sensor.h>
+// Accelerometer Hardware SPI Comms
+#define LIS3DH_CS 10
+Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
+
 
 // Define structures and classes
 
@@ -115,7 +125,8 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 100
+#define NUMPIXELS 130  // For Bike Whips
+//#define NUMPIXELS 50 // For Bike Wheels
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -175,6 +186,22 @@ void setup()
     pinMode(LED, OUTPUT);
     
     Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
+
+
+    // setup accelerometer stuff
+    Serial.println("LIS3DH test!");
+    
+    if (! lis.begin(0x18)) {   // change this to 0x19 for alternative i2c address
+      Serial.println("Couldnt start");
+      while (1);
+    }
+    Serial.println("LIS3DH found!");
+    
+    lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
+    
+    Serial.print("Range = "); Serial.print(2 << lis.getRange());  
+    Serial.println("G");
+
     
     // Setup the NeoPixel string
     strip.begin(); // This initializes the NeoPixel library.
@@ -601,24 +628,57 @@ void Sparkle(byte red, byte green, byte blue, int SparksPerFlash, int SparkleDel
 
 
 //#####################################################
+int movement = 0;
+void ReadAccel() {
+  lis.read();      // get X Y and Z data at once
+  // Then print out the raw data
+  if (testMode == 10) {
+      Serial.print("X:  "); Serial.print(lis.x); 
+      Serial.print("  \tY:  "); Serial.print(lis.y); 
+      Serial.print("  \tZ:  "); Serial.print(lis.z); 
+    
+    
+      /* Or....get a new sensor event, normalized */ 
+      sensors_event_t event; 
+      lis.getEvent(&event);
+      
+      /* Display the results (acceleration is measured in m/s^2) */
+      Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
+      Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
+      Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
+      Serial.println(" m/s^2 ");
+    
+      Serial.println();
+  }
+  movement = (abs(lis.x) + abs(lis.y) + abs(lis.z));
+  Serial.print("Movement: "); Serial.print(movement);
+  Serial.println();
+ 
+ }
+//#####################################################
+
 
 
 void loop() {
 
     static bool isLEDOn = false;
+     
+    // current time info
+    unsigned long currentMillis = millis();
     
-    // tiemr statics for measuring time since last action
+    // timer statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
     static unsigned long previousTransmitMillis = 0;
     static unsigned long previousPriorityUpdateMillis = 0;
-    
-    // current time info
-    unsigned long currentMillis = millis();
+
+    // timer statics for checking Accel
+    static unsigned long previousAccelCheckMillis = 0;
+    static unsigned long AccelCheckPeriodMs = 15000; // 15s between checking accel
     
     // led program controls
     const uint8_t numLedPrograms = 20; // max case id, not count
     const uint8_t defaultLedProgram = 18;
-    const uint8_t overrideProgram = 0; // for testing, we want a static program
+    static uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -655,8 +715,7 @@ void loop() {
     /***********************************************************************/
     if (currentMillis - previousLedUpdateMillis >= ledUpdatePeriodMs){
         // update the previous time record
-        char buffer[255];
-
+        previousLedUpdateMillis = currentMillis;
         
         /***********************************************************************/
         // Program change
@@ -674,7 +733,7 @@ void loop() {
             currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
             
             // if the new program is the same as it was last time, increment so we get more changes
-            if(currentLedProgram == previousLedProgram) currentLedProgram++;
+            //if(currentLedProgram == previousLedProgram) currentLedProgram++;
 
             if (overrideProgram != 0) {   // if there is an override program number from a knob input, or accelerometer, use that program.
                 currentLedProgram = overrideProgram;
@@ -684,6 +743,7 @@ void loop() {
             requestedProgramPrioity = 0;
             requestedLedProgram = 0;
             
+            char buffer[255];
             sprintf(buffer, "%ld: Changing to prg: %d pri: %d", currentMillis, currentLedProgram, currentProgramPrioity);
             Serial.println((char*)buffer);
 
@@ -693,6 +753,21 @@ void loop() {
         else {
             // if there isn't a higher priority, run the previous program
             currentLedProgram = previousLedProgram;
+        }
+
+        if (currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs){
+            // update the previous time record
+            previousAccelCheckMillis = currentMillis;
+            
+            ReadAccel();
+            if (movement < 8500) {  // looks like we aren't moving
+                currentLedProgram = 20; // go to a low power sparkly program
+                AccelCheckPeriodMs = 1000; // check the accel move often to see when we start moving again.
+            } 
+            else {
+                AccelCheckPeriodMs = 15000;
+                currentLedProgram = 14;
+            }
         }
         
         switch(currentLedProgram){
@@ -914,6 +989,3 @@ void loop() {
 
     
 }
-
-
-
