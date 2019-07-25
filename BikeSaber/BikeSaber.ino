@@ -86,18 +86,20 @@
 #include <Adafruit_LIS3DH.h>
 #include <Adafruit_Sensor.h>
 // Accelerometer Hardware SPI Comms
-#define LIS3DH_CS 10
-Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
+//#define LIS3DH_CS 10
+//Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
+
+// Accelerometer via I2C
+Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 
 // Define structures and classes
 
 
 // Define variables and constants
-int lessLight = 0;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
+int lessLight = 1;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
 int transmitMode = 0;  // use this for BikeSabers that we only want to recieve, but not vote.
 int testMode = 1;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
-int shortString = 0;   // Allows a quick way to change to a short string, like that used on the bike wheels. Parameters changed: NUMPIXELS, lessLight, transmitMode
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -677,7 +679,7 @@ void loop() {
     
     // led program controls
     const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 18;
+    const uint8_t defaultLedProgram = 4;
     static uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
@@ -760,13 +762,13 @@ void loop() {
             previousAccelCheckMillis = currentMillis;
             
             ReadAccel();
-            if (movement < 8500) {  // looks like we aren't moving
+            if (movement < 9000) {  // looks like we aren't moving. ~7600 is on a table.
                 currentLedProgram = 20; // go to a low power sparkly program
                 AccelCheckPeriodMs = 1000; // check the accel move often to see when we start moving again.
             } 
             else {
                 AccelCheckPeriodMs = 15000;
-                currentLedProgram = 14;
+                currentLedProgram = defaultLedProgram;
             }
         }
         
@@ -867,9 +869,10 @@ void loop() {
                 ledUpdatePeriodMs = 0;
                 Sparkle(255, 255, 255, 3, 5, 5);
                 break;
-             case 20: // Sparkle slow ariables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
+            
+            case 20: // Sparkle slow ariables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
-                Sparkle(150, 150, 150, 3, 10, 100);
+                Sparkle(150, 150, 150, 2, 10, 150);
                 break;
                 
             case 21: // SparkleDelay variables: byte red, byte green, byte blue, int FadeDelay, int SpeedDelay
@@ -980,7 +983,8 @@ void loop() {
                         if (requestedLedProgram >= numLedPrograms+1) {requestedLedProgram = 0;}
                         
                         requestedProgramPrioity =  (minimumProgramTimeMs / priorityDecrementPeriodMs);
-                        sprintf(buffer, "%ld: Test Mode prg:%d pri:%d ", currentMillis, requestedLedProgram, requestedProgramPrioity);
+                        sprintf(buffer, "%ld: Test Mode Requesting Next Prg prg:%d pri:%d ", currentMillis, requestedLedProgram, requestedProgramPrioity);
+                        Serial.println(buffer);
                   }
             }
             previousTransmitMillis = currentMillis;
