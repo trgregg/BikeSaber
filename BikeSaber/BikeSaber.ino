@@ -272,19 +272,23 @@ void policeMode(uint8_t wait) {
         case 0: // red color wipe
             policePreviousColor++;
             for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 150, 0));
+                  if ( lessLight ) { i=i+1;}   //turn off every other pixel
+                 strip.setPixelColor(i, strip.Color(0, 200, 0));
             }
             strip.show();
             delay(wait);
+            setAll(0,0,0);
             break;
 
-        case 1: // green color wipe
+        case 1: // blue color wipe
             policePreviousColor=0;
             for(int i=0; i < (strip.numPixels()); i++){
-                 strip.setPixelColor(i, strip.Color(0, 0, 150));
+                 if ( lessLight ) { i=i+1;}   //turn off every other pixel                   
+                 strip.setPixelColor(i, strip.Color(0, 0, 200));
             }
             strip.show();
             delay(wait);
+            setAll(0,0,0);
             break;
      }
 }
@@ -294,7 +298,7 @@ int policeChina2PreviousColor = 0;
 void policeChinaMode2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
 
     if(policeChina2PreviousColor == 0) { 
-          uint32_t strobeColor = strip.Color(0, 200, 0);  // flash red
+          uint32_t strobeColor = strip.Color(0, 150, 0);  // flash red
           for(int j = 0; j < StrobeCount; j++) {
               strip.fill(strobeColor,0, NUMPIXELS);
               strip.show();
@@ -326,7 +330,7 @@ int policeChinaHalf2PreviousColor = 0;
 void policeChinaModeHalf2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
 
     if(policeChinaHalf2PreviousColor == 0) { 
-          uint32_t strobeColor = strip.Color(0, 255, 0);  // flash red
+          uint32_t strobeColor = strip.Color(0, 150, 0);  // flash red
           for(int j = 0; j < StrobeCount; j++) {
               strip.fill(strobeColor,0, (NUMPIXELS/2));
               strip.show();
@@ -430,17 +434,17 @@ void theaterChaseRainbow(uint8_t wait) {
 // From https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/
 //#####################################################
 
-// colorWipeAndBlack (0x00,255,0x00, 50);
-// colorWipeAndBlack (0,0,0, 50); // wipe to black
-// colorWipeAndBlack ((random(50,200)),(random(50,200)),(random(50,200)), 50);  // random color 
-
-void colorWipeAndBlack(byte red, byte green, byte blue, int SpeedDelay) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
+// colorWipe (0x00,255,0x00, 50);
+// colorWipe (0,0,0, 50); // wipe to black
+// colorWipe ((random(50,200)),(random(50,200)),(random(50,200)), 50);  // random color 
+void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
+  for(int i = 0; i<strip.numPixels(); i++) {
       setPixel(i, red, green, blue);
       strip.show();
       delay(SpeedDelay);
   }
 }
+
 
 //############
 //meteorRain(255,255,255, 10, 64, true, 30);
@@ -450,7 +454,7 @@ void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTra
 	strip.clear();
 	strip.show();
   
-   for(int i = strip.numPixels() + (strip.numPixels()/2) ; i > 0; --i) {
+   for(int i = strip.numPixels() + (strip.numPixels()/2) ; i > (0 - meteorSize - meteorTrailDecay) ; --i) {
     
     
     // fade brightness all LEDs one step
@@ -571,8 +575,9 @@ void setPixelHeatColor (int Pixel, byte temperature) {
 
 //  RunningLights(255,255,0, 50);
 
+static int Position = 0;
 void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
-  int Position=0;
+//  int Position=0;
   
   for(int j = 0 ; j < strip.numPixels(); j++)
   {
@@ -589,6 +594,7 @@ void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
       
       strip.show();
       delay(WaveDelay);
+      break;
   }
 }
 
@@ -679,9 +685,9 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = currentMillis;
-    static unsigned long MovementThreshold = 9000; // Movement is normallized such that sitting on a table ~7600
+    static unsigned long MovementThreshold = 10000; // Movement is normallized such that sitting on a table ~7600-9200
     static unsigned long AccelCheckPeriodMs = 250; // 100ms between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 30*1000; // how long to wait before giong to still program in ms
     static int notMovingCounter = 0;
     static int StillProgram = 20; // pick a program to run when we are still
 
@@ -692,9 +698,9 @@ void loop() {
     const unsigned long priorityDecrementPeriodMs = 100;  // decrement the priority every X milliseconds. 100 means decrement the priority every 10ms.
     const unsigned long minimumProgramTimeMs = 10000;  // Run the current program for atleast 2secs before looking for new program
     
-    const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 0;
-    static uint8_t overrideProgram = 0; // for testing, we want a static program
+    const uint8_t numLedPrograms = 19; // max case id, not count
+    const uint8_t defaultLedProgram = 5;
+    static uint8_t overrideProgram ; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -719,7 +725,7 @@ void loop() {
           isLEDOn = !isLEDOn;
           
           char buffer[255];
-          sprintf(buffer, "%ld: prg: %d pri: %d updateWait: %d ms movement: %d", currentMillis, currentLedProgram, currentProgramPrioity, ledUpdatePeriodMs, movement);
+          sprintf(buffer, "%ld: prg: %d pri: %d updateWait: %d ms movement: %d still for: %d", currentMillis, currentLedProgram, currentProgramPrioity, ledUpdatePeriodMs, movement, (notMovingCounter * AccelCheckPeriodMs));
           Serial.println((char*)buffer);
           
     }
@@ -768,11 +774,11 @@ void loop() {
 
 // check Accel to see if we are moving
         if ((currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs) && (useAccel >= 1)){
-            previousAccelCheckMillis = currentMillis;  // update the previous time record
 
             ReadAccel();  // get the current accel data
             if ((movement < MovementThreshold) && (movement > 0)) {  // looks like we aren't moving... and we have a functioning accel... start counting
-                notMovingCounter++;
+                notMovingCounter = (notMovingCounter + (currentMillis - previousAccelCheckMillis)/AccelCheckPeriodMs) ;
+                                
                 char buffer[255];
                 
                 if (notMovingCounter * AccelCheckPeriodMs > notMovingTimeout) {  // we haven't been moving past our timeout, change to static program
@@ -785,13 +791,17 @@ void loop() {
                 notMovingCounter = 0;  // reset the counter since we are moving again
                 overrideProgram = 0;
             }
-
+            
+            previousAccelCheckMillis = currentMillis;  // update the previous time record
         }
 
         static int selectedProgram;
 
         if (overrideProgram != 0) {   // if there is an override program number use that program.
             selectedProgram = overrideProgram;
+            char buffer[255];
+            sprintf(buffer,"%d: Overiding Program! prg: %d", currentMillis, overrideProgram);
+            Serial.println((char*)buffer);
         } else {
             selectedProgram = currentLedProgram;
         }
@@ -802,23 +812,23 @@ void loop() {
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 150, 0, 3); // Red
-                colorWipeAndBlack (0,0,0, 1); // wipe to black
+                colorWipe (0, 150, 0, 3); // Red
+                colorWipe (0,0,0, 1); // wipe to black
                 break;
             case 1: // green color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (150, 0, 0, 3); // Grean
-                colorWipeAndBlack (0,0,0, 1); // wipe to black
+                colorWipe (150, 0, 0, 3); // Grean
+                colorWipe (0,0,0, 1); // wipe to black
                 break;
             case 2: // blue color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 0, 150, 3); // Blue
-                colorWipeAndBlack (0,0,0, 1); // wipe to black
+                colorWipe (0, 0, 150, 3); // Blue
+                colorWipe (0,0,0, 1); // wipe to black
                 break;
             case 3: // purple color wipe
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack (0, 75, 75, 3); // Purple
-                colorWipeAndBlack (0,0,0, 1); // wipe to black
+                colorWipe (0, 75, 75, 3); // Purple
+                colorWipe (0,0,0, 1); // wipe to black
                 break;
             case 4: // rainbow
                 ledUpdatePeriodMs = 10;
@@ -864,8 +874,8 @@ void loop() {
            
             case 14: // color wipe random color and back to black
                 ledUpdatePeriodMs = 0;
-                colorWipeAndBlack ((random(0,200)),(random(0,100)),(random(0,200)), 3);  // random color 
-                colorWipeAndBlack (0,0,0, 1); // wipe to black
+                colorWipe ((random(0,200)),(random(0,100)),(random(0,200)), 3);  // random color 
+                colorWipe (0,0,0, 1); // wipe to black
                 break;
                 
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
@@ -875,7 +885,7 @@ void loop() {
                 
             case 16:  // Strobe! variables: byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause
                 ledUpdatePeriodMs = 1;
-                Strobe(150,100,200, 5, 25, 200);
+                Strobe(150,100,200, 10, 25, 500);
                 break;
                 
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
@@ -892,7 +902,8 @@ void loop() {
                 ledUpdatePeriodMs = 0;
                 Sparkle(255, 255, 255, 3, 5, 5);
                 break;
-            
+           
+            // Sparkle slow is used for when there is no motion
             case 20: // Sparkle slow ariables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
                 ledUpdatePeriodMs = 0;
                 Sparkle(150, 150, 150, 2, 10, 150);
@@ -994,9 +1005,11 @@ void loop() {
                   broadcastPriority = currentProgramPrioity - (minimumProgramTimeMs / priorityDecrementPeriodMs);  // sending current priorty minus the amount that a recipient would add. This should sync units very quickly. 
                   broadcastProgram = currentLedProgram;
                 }
+
+                int randomWait = random(0,10);
+                delay(randomWait);  // prevents everyone from transmitting at the same time.
     
                 sprintf(radiopacket, "%d %d", broadcastProgram, broadcastPriority);
-                
                 sprintf(buffer, "%ld: Sending prg:%d pri:%d pack:\"%s\" len: %d Previous Transmit: %d ms (%d late)", currentMillis, broadcastProgram, broadcastPriority, radiopacket, strlen(radiopacket), (currentMillis - previousTransmitMillis), ((currentMillis - previousTransmitMillis) - transmitPeriodMs ));
                 Serial.println(buffer);
         
