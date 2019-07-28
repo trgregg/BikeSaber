@@ -7,18 +7,18 @@
 //  Part of embedXcode
 //  Embedded Computing on Xcode
 //
-//  Created by  Rei Vilo on Feb 17, 2015
-//  Copyright   (c) 2010-2018 http://embedxcode.weebly.com
+//  Created by  Rei Vilo on 17 Feb 2015
+//  Copyright   (c) 2010-2019 https://embedXcode.weebly.com
 //  Licence		All rights reserved
 //
-// Last update: Jul 15, 2016 release 5.0.8
+// Last update: 25 Sep 2018 release 10.0.6
 
 // Board identifier
 // See Boards.txt for <tag>.name=Arduino Uno (16 MHz)
 //
 BOARD_TAG  = adafruit_feather_m0
 
-// Port (optionnal)
+// Port (optional)
 // most common are /dev/tty.usbserial*, /dev/tty.usbmodem* or /dev/tty.uart*
 //
 BOARD_PORT = /dev/tty.usbmodem*
@@ -29,9 +29,9 @@ BOARD_PORT = /dev/tty.usbmodem*
 GCC_PREPROCESSOR_DEFINITIONS = __SAMD21G18A__ ARDUINO ADAFRUIT
 
 // Specify the full path and name of the application
-// with /Contents/Resources/Java/** after
+// with /Contents/Java/** after
 //
-HEADER_SEARCH_PATHS = /Applications/Adafruit.app/Contents/Resources/Java/** /Applications/Adafruit.app/Contents/Java/** /Applications/Arduino.app/Contents/Resources/Java/** /Applications/Arduino.app/Contents/Java/**
+HEADER_SEARCH_PATHS = $HOME/Library/Arduino15/packages/adafruit/hardware/samd/**
 
 // Maximum RAM size in bytes
 // given by <tag>.upload.maximum_ram_size in boards.txt for Maple and Teensy

@@ -37,7 +37,8 @@ APP_LIBS_LIST = Wire HID I2S SAMD_AnalogCorrection SDU SPI
 #
 # USER = RadioHead 
 #
-USER_LIBS_LIST = RadioHead Adafruit_NeoPixel
+# USER_LIBS_LIST = RadioHead Adafruit_NeoPixel Adafruit_Zero_DMA_Library Adafruit_LIS3DH
+USER_LIBS_LIST =
 
 # List local libraries here
 # !!! Help: http://bit.ly/2juEP91

@@ -2019,7 +2019,7 @@
 				AAAA180718174602AA0000B2 /* variants */,
 			);
 			name = samd;
-			path = /Users/jlgregg/Library/Arduino15/packages/adafruit/hardware/samd/1.2.1;
+			path = ../../../../../../../../../Users/jlgregg/Library/Arduino15/packages/adafruit/hardware/samd/1.5.1;
 			sourceTree = SDKROOT;
 		};
 		AAAA180718174602AA00001F /* cores */ = {
@@ -4049,6 +4049,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 35C74A932100169C007E4210;
 			productRefGroup = 35C74AAA2100169C007E4210 /* Products */;

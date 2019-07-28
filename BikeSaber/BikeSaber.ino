@@ -233,6 +233,10 @@ uint32_t Wheel(byte WheelPos) {
     return strip.Color(WheelPos * 3, 200 - WheelPos * 3, 0);
 }
 
+void setPixel(int Pixel, byte red, byte green, byte blue) {  // This utility makes it easier to set a pixel to color provided RGB
+    strip.setPixelColor(Pixel, strip.Color(red, green, blue));
+}
+
 void setAll(byte red, byte green, byte blue) {  // This utility makes it easier to set all pixels to a color
   for(int i = 0; i < strip.numPixels() + strip.numPixels(); i++ ) {
     setPixel(i, red, green, blue); 
@@ -240,243 +244,7 @@ void setAll(byte red, byte green, byte blue) {  // This utility makes it easier 
    strip.show();
 }
 
-void setPixel(int Pixel, byte red, byte green, byte blue) {  // This utility makes it easier to set a pixel to color provided RGB
-   strip.setPixelColor(Pixel, strip.Color(red, green, blue));
-}
-
-
-// Functions
-
-// Fill the dots one after the other with a color
-uint16_t colorWipecurrentPixel = 0;
-void colorWipe(uint32_t c) {
-    strip.setPixelColor(colorWipecurrentPixel, c);
-    strip.show();
-    colorWipecurrentPixel++;
-    if(colorWipecurrentPixel >= strip.numPixels()+50){
-        // we've filled the strip with c, now turn it all off and start back at pixel 0
-        for(int i=0; i < strip.numPixels(); i++){
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
-          strip.show();
-        }
-        strip.show();
-        colorWipecurrentPixel = 0;
-    }
-}
-
-// Flash Red-Blue on the full string
-int policePreviousColor = 0;
-void policeMode(uint8_t wait) {
-     switch(policePreviousColor){
-
-        case 0: // red color wipe
-            policePreviousColor++;
-            for(int i=0; i < (strip.numPixels()); i++){
-                  if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel
-                 strip.setPixelColor(i, strip.Color(0, 200, 0));
-            }
-            strip.show();
-            delay(wait);
-            setAll(0,0,0);
-            break;
-
-        case 1: // blue color wipe
-            policePreviousColor=0;
-            for(int i=0; i < (strip.numPixels()); i++){
-                 if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel                   
-                 strip.setPixelColor(i, strip.Color(0, 0, 200));
-            }
-            strip.show();
-            delay(wait);
-            setAll(0,0,0);
-            break;
-     }
-}
-
-
-int policeChina2PreviousColor = 0;
-void policeChinaMode2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
-
-    if(policeChina2PreviousColor == 0) { 
-          uint32_t strobeColor = strip.Color(0, 150, 0);  // flash red
-          for(int j = 0; j < StrobeCount; j++) {
-              strip.fill(strobeColor,0, NUMPIXELS);
-              strip.show();
-              delay(FlashDelay);
-              strip.clear();
-              strip.show();
-              delay(FlashDelay);
-          }        
-       delay(EndPause);
-       policeChina2PreviousColor++;
-      }
- 
-    if(policeChina2PreviousColor == 1) { 
-          uint32_t strobeColor = strip.Color(0, 0, 255);  // flash blue
-          for(int j = 0; j < StrobeCount; j++) {
-              strip.fill(strobeColor, 0, NUMPIXELS);
-              strip.show();
-              delay(FlashDelay);
-              strip.clear();
-              strip.show();
-              delay(FlashDelay);
-          }        
-       delay(EndPause);
-       policeChina2PreviousColor = 0;
-      }
-}
-
-int policeChinaHalf2PreviousColor = 0;
-void policeChinaModeHalf2(int StrobeCount, int FlashDelay, int EndPause) { // int StrobeCount, int FlashDelay, int EndPause)
-
-    if(policeChinaHalf2PreviousColor == 0) { 
-          uint32_t strobeColor = strip.Color(0, 150, 0);  // flash red
-          for(int j = 0; j < StrobeCount; j++) {
-              strip.fill(strobeColor,0, (NUMPIXELS/2));
-              strip.show();
-              delay(FlashDelay);
-              strip.clear();
-              strip.show();
-              delay(FlashDelay);
-          }        
-       delay(EndPause);
-       policeChinaHalf2PreviousColor++;
-      }
- 
-    if(policeChinaHalf2PreviousColor == 1) { 
-          uint32_t strobeColor = strip.Color(0, 0, 255);  // flash blue
-          for(int j = 0; j < StrobeCount; j++) {
-              strip.fill(strobeColor, (NUMPIXELS/2), NUMPIXELS);
-              strip.show();
-              delay(FlashDelay);
-              strip.clear();
-              strip.show();
-              delay(FlashDelay);
-          }        
-       delay(EndPause);
-       policeChinaHalf2PreviousColor = 0;
-      }
-}
-
-uint16_t rainbowColorMotion = 0;
-void rainbow( int wait ) {
-    for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
-        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
-        strip.setPixelColor(i, Wheel((i+rainbowColorMotion) & 255));
-
-    }
-    strip.show();
-    delay (wait);
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
-}
-
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(int wait) {
-    for(uint16_t i=0; i< strip.numPixels(); i=i+1) {
-        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
-        strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + rainbowColorMotion) & 255));
-    }
-
-    strip.show();
-    delay (wait);
-
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 256*5) rainbowColorMotion = 0;  
-}
-
-
-//Theatre-style crawling lights.
-void theaterChase(uint32_t c, int wait) {
-    static uint8_t q;
-
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q-1, 0);    //turn off every third pixel from the previous run
-    }
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, c);    //set every third pixel
-    }
-    strip.show();
-    delay (wait);
-
-    // every other step, turn the leds off (alternating with the color c)
-    q++;
-    if(q >= 3) q = 0;
-
-}
-
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-    static uint8_t q;
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q-1, 0);        //turn every third pixel off
-    }
-    
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, Wheel( (i+rainbowColorMotion) % 255));    //turn every third pixel on
-    }
-    strip.show();
-    delay (wait);
-
-    // every other step, turn the leds off (alternating with the color c)
-    q++;
-    if(q >= 3) q = 0;
-    
-    rainbowColorMotion++;
-    if(rainbowColorMotion > 255) rainbowColorMotion = 0;
-}
-
-
-//#####################################################
-// From https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/
-//#####################################################
-
-// colorWipe (0x00,255,0x00, 50);
-// colorWipe (0,0,0, 50); // wipe to black
-// colorWipe ((random(50,200)),(random(50,200)),(random(50,200)), 50);  // random color 
-
-void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
-  for(int i = 0; i<strip.numPixels(); i++) {
-      setPixel(i, red, green, blue);
-      strip.show();
-      delay(SpeedDelay);
-  }
-}
-
-
-//############
-//meteorRain(255,255,255, 10, 64, true, 30);
-
-void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {  
-	// Start with all off and start back at pixel 0
-	strip.clear();
-	strip.show();
-  
-   for(int i = strip.numPixels() + (strip.numPixels()/2) ; i > (0 - meteorSize - meteorTrailDecay) ; --i) {
-    
-    
-    // fade brightness all LEDs one step
-    for(int j=0; j< strip.numPixels(); j++) {
-      if( (!meteorRandomDecay) || (random(10)>5) ) {
-        fadeToBlack(j, meteorTrailDecay );        
-      }
-    }
-    
-    // draw meteor
-    for(int j = 0; j < meteorSize; j++) {
-      if( ( i-j < strip.numPixels() ) && ( i - j >=0 ) ) {
-        strip.setPixelColor(i-j, red, green, blue);
-      } 
-    }
-   
-    strip.show();
-    delay(SpeedDelay);
-  }
-}
-
+// helper to fade current strip setting towards black
 void fadeToBlack(int ledNo, byte fadeValue) {
     uint32_t oldColor;
     uint8_t r, g, b;
@@ -486,7 +254,7 @@ void fadeToBlack(int ledNo, byte fadeValue) {
     r = (oldColor & 0x00ff0000UL) >> 16;
     g = (oldColor & 0x0000ff00UL) >> 8;
     b = (oldColor & 0x000000ffUL);
-
+    
     r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
     g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
     b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
@@ -494,208 +262,613 @@ void fadeToBlack(int ledNo, byte fadeValue) {
     strip.setPixelColor(ledNo, r,g,b);
 }
 
-//############
-//  Strobe(255, 255, 255, 10, 50, 1000);
 
-void Strobe(byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause){
+// Functions for LED programs
+// All LED functions should store state in these global variable
+// These variables get reset after changing programs
+// If a global vaiable is added for LED program tracking, add it to the reset function, too
+int16_t g_LedProgramCurrentPixel = 0;
+uint32_t g_LedProgramColor = 0;
+uint8_t g_LedProgramState = 0;
 
-    uint32_t strobeColor = strip.Color(red, green, blue);
-    for(int j = 0; j < StrobeCount; j++) {
-        strip.fill(strobeColor,0, strip.numPixels());
-        strip.show();
-        delay(FlashDelay);
-        strip.clear();
-	      strip.show();
-        delay(FlashDelay);
-    }
- 
- delay(EndPause);
+/***********************************************************************/
+// Clear all the static program states so that we can have all programs
+// start in a fresh state. This will help keep things in visual sync
+/***********************************************************************/
+void resetAllLedProgramStates(){
+    setAll (0,0,0); // clear all LEDs by setting them to off
+    g_LedProgramCurrentPixel = 0;
+    g_LedProgramColor = 0;
+    g_LedProgramState = 0;
 }
 
-//############
-//  Sutro(255, 255, 255, 10, 50, 1000);
+/***********************************************************************/
+// Color Wipe
+// Fill the dots one after the other with a color
+// Then wipe them all off again
+// concept from:
+// https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/
 
-int SutroPosition = 0;
-void Sutro(int wait){
-
-    uint32_t RedColor = strip.Color(0, 200, 0);
-    uint32_t WhiteColor = strip.Color(150, 100, 200);
-    SutroPosition++;
-    if (SutroPosition > strip.numPixels()) { SutroPosition = 1;}
+/***********************************************************************/
+void colorWipe(uint32_t c) {
+    // use g_LedProgramState for wipe on/off state
+    switch(g_LedProgramState){
+        default:
+            g_LedProgramState = 0;
+            g_LedProgramCurrentPixel = 0;
+            // fall through
+        case 0: // wipe color on
+            strip.setPixelColor(g_LedProgramCurrentPixel, c);
+            strip.show();
+            break;
+        case 1: // wipe color off
+            strip.setPixelColor(g_LedProgramCurrentPixel, 0);
+            strip.show();
+            break;
+    }
     
-    strip.fill(WhiteColor, 0+SutroPosition-int(strip.numPixels() *3/4),  0+SutroPosition-int(strip.numPixels()/2)); // 
-    strip.fill(RedColor, 0+SutroPosition-int(strip.numPixels()/2), 0+SutroPosition-int(strip.numPixels()/4)); // 
-    strip.fill(WhiteColor, 0+SutroPosition-int(strip.numPixels()/4), 0+SutroPosition); // 
-    strip.fill(RedColor, 0+SutroPosition, int(strip.numPixels()/4)+SutroPosition); // bottom 1/4 is red
-    strip.fill(WhiteColor, int(strip.numPixels()/4)+SutroPosition, int(strip.numPixels()/2)+SutroPosition); // bottom 1/4-1/2 is white
-    strip.fill(RedColor, int(strip.numPixels()/2)+SutroPosition, int(strip.numPixels() * 3/4)+SutroPosition); // top 1/2-3/4 is red
-    strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+SutroPosition, strip.numPixels()); // top 3/4 is white
+    // move to the next pixel
+    g_LedProgramCurrentPixel++;
+    
+    // if we've filled the strip, flip on/off and refill
+    // add a few pixels over the strip length to make it stay lit/off for a bit
+    if(g_LedProgramCurrentPixel >= strip.numPixels()+25){
+        g_LedProgramState++;
+        g_LedProgramCurrentPixel = 0;
+    }
+}
+
+// helper function to do a wipe with RGB params
+void colorWipe(byte red, byte green, byte blue) {
+    colorWipe(strip.Color(red, green, blue));
+}
+
+/***********************************************************************/
+// Police Mode
+// Flash Red-Blue on the full string
+/***********************************************************************/
+uint16_t policeMode() {
+    uint16_t delayForNextUpdateMs = 100;
+    switch(g_LedProgramState){
+        default:
+        case 0: // red color wipe
+            g_LedProgramState++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel
+                strip.setPixelColor(i, strip.Color(0, 200, 0));
+            }
+            strip.show();
+            delayForNextUpdateMs = 100;
+            break;
+        case 1: // all off
+            g_LedProgramState++;
+            setAll(0,0,0);
+            delayForNextUpdateMs = 10;
+            break;
+        case 2: // blue color wipe
+            g_LedProgramState++;
+            for(int i=0; i < (strip.numPixels()); i++){
+                if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel
+                strip.setPixelColor(i, strip.Color(0, 0, 200));
+            }
+            strip.show();
+            delayForNextUpdateMs = 100;
+            break;
+        case 3: // all off
+            g_LedProgramState = 0;
+            setAll(0,0,0);
+            delayForNextUpdateMs = 10;
+            break;
+    }
+    
+    return delayForNextUpdateMs;
+}
+
+/***********************************************************************/
+// China Police Mode with full or half string modes
+// Fast strobe on red; pause; fast strobe on blue; pause
+/***********************************************************************/
+uint16_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool halfString) {
+    // use g_LedProgramCurrentPixel as a strobe counter
+    // use g_LedProgramState for state machine state
+    // use g_LedProgramColor for current color
+    uint16_t delayForNextUpdateMs = 10;
+    const uint32_t colorsForFlashing[2] = {strip.Color(0, 150, 0), strip.Color(0, 0, 255)};
+    switch(g_LedProgramState){
+        default:
+        case 0:
+            // initial or invalid state; set things back to default and start over
+            g_LedProgramState = 0;
+            g_LedProgramCurrentPixel = 0;
+            g_LedProgramColor = colorsForFlashing[0];  // dim red
+            g_LedProgramState++;
+            // fall through
+        case 1: // strobe color on
+            // create the color to strobe on
+            if(halfString){
+                // for half string flashing, use one side for red and one side for blue
+                if(g_LedProgramColor == colorsForFlashing[0]){
+                    strip.fill(g_LedProgramColor, 0, (NUMPIXELS/2));
+                } else {
+                    strip.fill(g_LedProgramColor, (NUMPIXELS/2), NUMPIXELS);
+                }
+            }
+            else {
+                // for full string, just fill the full string with the current color
+                strip.fill(g_LedProgramColor,0, NUMPIXELS);
+            }
+            strip.show();
+            
+            // setup for strobe delay before turning off
+            delayForNextUpdateMs = flashDelay;
+            
+            // go to the next state
+            g_LedProgramState++;
+            break;
+        case 2: // strobe color off
+            // turn off all LEDs
+            strip.clear();
+            strip.show();
+            
+            // increment the number of strobe flashes we've done
+            g_LedProgramCurrentPixel++;
+            
+            // if we've done the desired number of flashes, move the state forward
+            if(g_LedProgramCurrentPixel < strobeCount){
+                // keep strobing
+                // set up the delay for the strobe effect
+                delayForNextUpdateMs = flashDelay;
+                g_LedProgramState = 1;
+            } else {
+                // done strobing on the current color
+                g_LedProgramCurrentPixel = 0; // reset strobe counter
+                g_LedProgramState++;
+                
+                // set up the delay for going to the next color
+                delayForNextUpdateMs = endPause;
+                
+                // change the color
+                if (g_LedProgramColor == colorsForFlashing[0]){
+                    g_LedProgramColor = colorsForFlashing[1];  // blue
+                } else {
+                    g_LedProgramColor == colorsForFlashing[0]; // dim red
+                }
+            }
+            break;
+        case 3: // end pause between colors
+            delayForNextUpdateMs = endPause;
+            g_LedProgramState = 1;
+            break;
+    } // end switch state machine
+    
+    return delayForNextUpdateMs;
+}
+
+/***********************************************************************/
+// Rainbow
+// Fill the LEDs with a moving rainbow
+/***********************************************************************/
+void rainbow() {
+    // set each LED to an increment color from wheel; this makes a rainbow
+    for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
+        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
+        strip.setPixelColor(i, Wheel((i+g_LedProgramColor) & 255));
+    }
+    
+    // show the rainbow
+    strip.show();
+    
+    // move to the next initial color
+    g_LedProgramColor++;
+    if(g_LedProgramColor > 255) g_LedProgramColor = 0;
+}
+
+/***********************************************************************/
+// Rainbow cycle
+// Slightly different from rainbow, this makes the rainbow equally
+// distributed throughout the strip
+/***********************************************************************/
+
+void rainbowCycle() {
+    for(uint16_t i=0; i< strip.numPixels(); i=i+1) {
+        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
+        strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + g_LedProgramColor) & 255));
+    }
+
+    // show the rainbow
+    strip.show();
+    
+    // move to the next initial color
+    g_LedProgramColor++;
+    if(g_LedProgramColor > 256*5) g_LedProgramColor = 0;
+}
+
+/***********************************************************************/
+// Theater chase
+// Theatre-style crawling lights.
+/***********************************************************************/
+void theaterChase(uint32_t color) {
+    // use g_LedProgramCurrentPixel for current pixel position
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        //turn off every third pixel from the previous run
+        strip.setPixelColor(i+g_LedProgramCurrentPixel-1, 0);
+    }
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+g_LedProgramCurrentPixel, color);    //set every third pixel
+    }
+    strip.show();
+
+    // move the starting pixel forward one
+    g_LedProgramCurrentPixel++;
+    
+    // reset to first pixel after moving 3
+    if(g_LedProgramCurrentPixel >= 3) g_LedProgramCurrentPixel = 0;
+
+}
+
+/***********************************************************************/
+//Theatre-style crawling lights with rainbow effect
+/***********************************************************************/
+void theaterChaseRainbow() {
+    // use g_LedProgramCurrentPixel for current pixel position
+    // use g_LedProgramColor for rainbox color position
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+g_LedProgramCurrentPixel-1, 0);        //turn every third pixel off
+    }
+    
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+        strip.setPixelColor(i+g_LedProgramCurrentPixel, Wheel( (i+g_LedProgramColor) % 255));    //turn every third pixel on
+    }
+    strip.show();
+
+    // move the starting pixel forward one
+    g_LedProgramCurrentPixel++;
+    // reset to first pixel after moving 3
+    if(g_LedProgramCurrentPixel >= 3) g_LedProgramCurrentPixel = 0;
+    
+    // increment the initial color position
+    g_LedProgramColor++;
+    if(g_LedProgramColor > 255) g_LedProgramColor = 0;
+}
+
+
+/***********************************************************************/
+// Meteor rain
+// make it rain glowing rocks
+/***********************************************************************/
+uint16_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
+    // use g_LedProgramCurrentPixel for meteor position
+    // use g_LedProgramState for initialization flag
+    
+    // initialize or reset the initial meteor position
+    if(g_LedProgramState == 0){
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/2);
+        g_LedProgramState++;
+    }
+    
+    // reset the meteor position after it shoots through
+    if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/2);
+    }
+    
+    
+    // fade brightness all LEDs one step
+    for(int j=0; j< strip.numPixels(); j++) {
+        if( (!meteorRandomDecay) || (random(10)>5) ) {
+            fadeToBlack(j, meteorTrailDecay );
+        }
+    }
+    
+    // draw meteor
+    for(int j = 0; j < meteorSize; j++) {
+        if( ( g_LedProgramCurrentPixel - j < strip.numPixels() ) && ( g_LedProgramCurrentPixel - j >= 0 ) ) {
+            strip.setPixelColor(g_LedProgramCurrentPixel - j, red, green, blue);
+        }
+    }
     
     strip.show();
-    delay(wait);
+    g_LedProgramCurrentPixel--;
     
-
 }
-//#############
-//  Fire(55,120,15);
 
-void Fire(int Cooling, int Sparking, int SpeedDelay) {
-//  	strip.clear();
-//    strip.show();
-
-  static byte heat[NUMPIXELS];
-  int cooldown;
-  
-  // Step 1.  Cool down every cell a little
-  for( int i = 0; i < strip.numPixels(); i++) {
-    cooldown = random(0, ((Cooling * 10) / strip.numPixels()) + 2);
+/***********************************************************************/
+// Strobe
+// Flashy all the string with one color
+/***********************************************************************/
+uint16_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay, int endPause){
+    // use g_LedProgramState for on/off/pause state
+    // use g_LedProgramCurrentPixel as a strobe counter
     
-    if(cooldown>heat[i]) {
-      heat[i]=0;
-    } else {
-      heat[i]=heat[i]-cooldown;
+    uint32_t strobeColor = strip.Color(red, green, blue);
+    uint16_t delayForNextUpdateMs = flashDelay;
+    
+    switch(g_LedProgramState){
+        default:
+        case 0: // initialize
+            g_LedProgramCurrentPixel = 0;
+            g_LedProgramState++;
+            // fall through
+        case 1: // turn all on
+            strip.fill(strobeColor, 0, strip.numPixels());
+            strip.show();
+            delayForNextUpdateMs = flashDelay;
+            g_LedProgramState++;
+            break;
+        case 2: // turn all off
+            strip.clear();
+            strip.show();
+            
+            // set next state to turn things on
+            g_LedProgramState = 1;
+            
+            // increment the number of strobe flashes we've done
+            g_LedProgramCurrentPixel++;
+            // if we've done the desired number of flashes, give a longer pause
+            if(g_LedProgramCurrentPixel < strobeCount){
+                // keep strobing
+                // set up the delay for the strobe effect
+                delayForNextUpdateMs = flashDelay;
+            } else {
+                // reset the strobe counter
+                g_LedProgramCurrentPixel = 0; // reset strobe counter
+                
+                // set up the delay for going to the next color
+                delayForNextUpdateMs = endPause;
+            }
+            break;
     }
-  }
-  
-  // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-  for( int k= strip.numPixels() - 1; k >= 2; k--) {
-    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
-  }
     
-  // Step 3.  Randomly ignite new 'sparks' near the bottom
-  if( random(255) < Sparking ) {
-    int y = random(7);
-    heat[y] = heat[y] + random(160,255);
-    //heat[y] = random(160,255);
-  }
-
-  // Step 4.  Convert heat to LED colors
-  for( int j = 0; j < strip.numPixels(); j++) {
-    setPixelHeatColor(j, heat[j] );
-  }
-
-  strip.show();
-  delay(SpeedDelay);
+    return delayForNextUpdateMs;
 }
 
+/***********************************************************************/
+// Sutro emulator?
+/***********************************************************************/
+void Sutro(){
+    // use g_LedProgramCurrentPixel for current position tracking
+    
+    const uint32_t RedColor = strip.Color(0, 200, 0);
+    const uint32_t WhiteColor = strip.Color(150, 100, 200);
+    g_LedProgramCurrentPixel++;
+    
+    if (g_LedProgramCurrentPixel > strip.numPixels()) g_LedProgramCurrentPixel = 1;
+    
+    strip.fill(WhiteColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels() *3/4),
+               0+g_LedProgramCurrentPixel-int(strip.numPixels()/2));
+    strip.fill(RedColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels()/2),
+               0+g_LedProgramCurrentPixel-int(strip.numPixels()/4));
+    strip.fill(WhiteColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels()/4),
+               0+g_LedProgramCurrentPixel);
+    strip.fill(RedColor, 0+g_LedProgramCurrentPixel,
+               int(strip.numPixels()/4)+g_LedProgramCurrentPixel); // bottom 1/4 is red
+    strip.fill(WhiteColor, int(strip.numPixels()/4)+g_LedProgramCurrentPixel,
+               int(strip.numPixels()/2)+g_LedProgramCurrentPixel); // bottom 1/4-1/2 is white
+    strip.fill(RedColor, int(strip.numPixels()/2)+g_LedProgramCurrentPixel,
+               int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel); // top 1/2-3/4 is red
+    strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
+    
+    strip.show();
+}
+
+/***********************************************************************/
+// Fire
+// make it burn!
+/***********************************************************************/
+// Helper to make fire colors
 void setPixelHeatColor (int Pixel, byte temperature) {
-  // Scale 'heat' down from 0-255 to 0-191
-  byte t192 = round((temperature/255.0)*191);
- 
-  // calculate ramp up from
-  byte heatramp = t192 & 0x3F; // 0..63
-  heatramp <<= 2; // scale up to 0..252
- 
-  // figure out which third of the spectrum we're in:
-  if( t192 > 0x80) {                     // hottest
-    setPixel(Pixel, 255, 255, heatramp);  // RGB = 255, 255, heat.... GRB = 255, 255, heat
-  } else if( t192 > 0x40 ) {             // middle
-    setPixel(Pixel, heatramp, 255, 0);   // RGB = 255, heat, 0.... GRB = heat, 255, 0
-  } else {                               // coolest
-    setPixel(Pixel, 0, heatramp, 0);     // RGB = heat, 0, 0.... GRB = 0, heat, 0
-  }
+    // Scale 'heat' down from 0-255 to 0-191
+    byte t192 = round((temperature/255.0)*191);
+    
+    // calculate ramp up from
+    byte heatramp = t192 & 0x3F; // 0..63
+    heatramp <<= 2; // scale up to 0..252
+    
+    // figure out which third of the spectrum we're in:
+    if( t192 > 0x80) {                     // hottest
+        setPixel(Pixel, 255, 255, heatramp);  // RGB = 255, 255, heat.... GRB = 255, 255, heat
+    } else if( t192 > 0x40 ) {             // middle
+        setPixel(Pixel, heatramp, 255, 0);   // RGB = 255, heat, 0.... GRB = heat, 255, 0
+    } else {                               // coolest
+        setPixel(Pixel, 0, heatramp, 0);     // RGB = heat, 0, 0.... GRB = 0, heat, 0
+    }
 }
 
-//#############
+void Fire(int Cooling, int Sparking) {
+    static byte heat[NUMPIXELS];
+    int cooldown;
+    
+    // Step 1.  Cool down every cell a little
+    for( int i = 0; i < strip.numPixels(); i++) {
+        cooldown = random(0, ((Cooling * 10) / strip.numPixels()) + 2);
+        
+        if(cooldown>heat[i]) {
+            heat[i]=0;
+        } else {
+            heat[i]=heat[i]-cooldown;
+        }
+    }
+    
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for( int k= strip.numPixels() - 1; k >= 2; k--) {
+        heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+    }
+    
+    // Step 3.  Randomly ignite new 'sparks' near the bottom
+    if( random(255) < Sparking ) {
+        int y = random(7);
+        heat[y] = heat[y] + random(160,255);
+        //heat[y] = random(160,255);
+    }
+    
+    // Step 4.  Convert heat to LED colors
+    for( int j = 0; j < strip.numPixels(); j++) {
+        setPixelHeatColor(j, heat[j] );
+    }
+    
+    strip.show();
+}
 
-//  RunningLights(255,255,0, 50);
-
-static int Position = 0;
-void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
-//  int Position=0;
-  
-  for(int j = 0 ; j < strip.numPixels(); j++)
-  {
-      Position++; // = 0; //Position + Rate;
-      for(int i=0; i < strip.numPixels(); i++) {
+/***********************************************************************/
+// Running lights
+// like niterider?
+/***********************************************************************/
+void RunningLights(byte red, byte green, byte blue) {
+    // use g_LedProgramCurrentPixel to track current position
+    g_LedProgramCurrentPixel++;
+    for(int i=0; i < strip.numPixels(); i++) {
         // sine wave, 3 offset waves make a rainbow!
         //float level = sin(i+Position) * 127 + 128;
         //setPixel(i,level,0,0);
         //float level = sin(i+Position) * 127 + 128;
-        setPixel(i,((sin(i+Position) * 127 + 128)/255)*red,
-                   ((sin(i+Position) * 127 + 128)/255)*green,
-                   ((sin(i+Position) * 127 + 128)/255)*blue);
-      }
-      
-      strip.show();
-      delay(WaveDelay);
-      break;
-  }
-}
-
-//################
-//  SparkleDecay(255, 255, 255, 0, 10);
-
-void SparkleDecay(int red, int green, int blue, int FadeDelay, int SpeedDelay) {
-
-    int Pixel = random(strip.numPixels());
-    strip.setPixelColor(Pixel,red,green,blue);
-    strip.setPixelColor(Pixel+1,red,green,blue);
-    strip.show();
-    
-    // fade out.
-    for(int j=0; j< 100; j++) {
-      delay(FadeDelay);
-      fadeToBlack(Pixel, j );
-      fadeToBlack(Pixel+1, j );
-      strip.show();
+        setPixel(i,((sin(i+g_LedProgramCurrentPixel) * 127 + 128)/255)*red,
+                 ((sin(i+g_LedProgramCurrentPixel) * 127 + 128)/255)*green,
+                 ((sin(i+g_LedProgramCurrentPixel) * 127 + 128)/255)*blue);
     }
     
-    strip.clear();
     strip.show();
-    delay(SpeedDelay);
+}
+
+
+/***********************************************************************/
+// Sparkles Decay
+// Sparkles that fade to black slowly
+/***********************************************************************/
+uint16_t SparkleDecay(int red, int green, int blue, int fadeDelay, int endPause) {
+
+    // use g_LedProgramState for on/off/pause state control
+    // use g_LedProgramCurrentPixel for tracking which pixels are sparkling
+    static uint8_t fadeCount = 0;
+    uint16_t delayForNextUpdateMs = fadeDelay;
+    
+    switch (g_LedProgramState) {
+        default:
+        case 0: // initialize and turn on
+            // select a random pixel to turn on
+            g_LedProgramCurrentPixel = random(strip.numPixels());
+            
+            // initial all the states
+            fadeCount = 0;
+            
+            // set a random pixel and its neighbor to the desired color
+            strip.setPixelColor(g_LedProgramCurrentPixel, red, green, blue);
+            strip.setPixelColor(g_LedProgramCurrentPixel+1, red, green, blue);
+            strip.show();
+            
+            g_LedProgramState = 1;
+            delayForNextUpdateMs = fadeDelay;
+            break;
+        case 1: // off
+            // increment the number of strobe flashes
+            fadeCount++;
+            
+            // fade the pixels
+            fadeToBlack(g_LedProgramCurrentPixel, fadeCount);
+            fadeToBlack(g_LedProgramCurrentPixel+1, fadeCount);
+            
+            if(fadeCount < 100){
+                // keep fading
+                delayForNextUpdateMs = fadeDelay;
+                g_LedProgramState = 1;
+            } else {
+                // done flashing, do a pause and pick a new pixel to flash
+                strip.clear();
+                delayForNextUpdateMs = endPause;
+                g_LedProgramState = 0;
+            }
+            strip.show();
+            break;
+    }
+    
+    return delayForNextUpdateMs;
 }
 
 //################
 //  Sparkle(255, 255, 255, 0, 10);
-
-void Sparkle(byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay) {
-    for (int i = 0; i < SparksPerFlash; i++) {
-      int Pixel = random(strip.numPixels());
-      setPixel(Pixel-1,red,green,blue);
-      setPixel(Pixel,red,green,blue);
-      setPixel(Pixel+1,red,green,blue);
-      strip.show();
+/***********************************************************************/
+// Sparkle
+// turn on several groups of pixels and then turn everything off
+/***********************************************************************/
+uint16_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
+    
+    // use g_LedProgramState for on/off state tracking
+    uint16_t delayForNextUpdateMs = sparkleDelay;
+    
+    switch(g_LedProgramState){
+        default:
+            strip.clear();
+            g_LedProgramState = 0;
+            // fall through
+        case 0: // on
+            // turn on several groups of pixels
+            for (int i = 0; i < sparksPerFlash; i++) {
+                int Pixel = random(strip.numPixels());
+                setPixel(Pixel-1,red,green,blue);
+                setPixel(Pixel,red,green,blue);
+                setPixel(Pixel+1,red,green,blue);
+            }
+            strip.show();
+            delayForNextUpdateMs = sparkleDelay;
+            g_LedProgramState++;
+            break;
+        case 1:
+            strip.clear();
+            strip.show();
+            delayForNextUpdateMs = endPause;
+            g_LedProgramState = 0;
     }
-    delay(SparkleDelay);
-  
-    strip.clear();
-    strip.show();
-    delay(SpeedDelay);
+    
+    return delayForNextUpdateMs;
 }
 
 
-//#####################################################
-int movement = 0;
-void ReadAccel() {
-  lis.read();      // get X Y and Z data at once
-  // Then print out the raw data
-  if (testMode >= 2) {
-      Serial.print("X:  "); Serial.print(abs(lis.x)); 
-      Serial.print("  \tY:  "); Serial.print(abs(lis.y)); 
-      Serial.print("  \tZ:  "); Serial.print(abs(lis.z)); 
+/***********************************************************************/
+// Read the accelerometer to monitor for motion
+/***********************************************************************/
+int ReadAccel() {
+    lis.read();      // get X Y and Z data at once
+    // Then print out the raw data
+    if (testMode >= 2) {
+        Serial.print("X:  "); Serial.print(abs(lis.x));
+        Serial.print("  \tY:  "); Serial.print(abs(lis.y));
+        Serial.print("  \tZ:  "); Serial.print(abs(lis.z));
+        
+        if (testMode >= 3) {
+            /* Or....get a new sensor event, normalized */
+            sensors_event_t event;
+            lis.getEvent(&event);
+            
+            /* Display the results (acceleration is measured in m/s^2) */
+            Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
+            Serial.print(" \tY: "); Serial.print(event.acceleration.y);
+            Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
+            Serial.print(" m/s^2 ");
+        }
+        
+        Serial.println();
+    }
+    int accelMagnitude = (abs(lis.x) + abs(lis.y) + abs(lis.z));  // normallize the movement such that sitting on a table is ~7600.
     
-      if (testMode >= 3) {
-          /* Or....get a new sensor event, normalized */ 
-          sensors_event_t event; 
-          lis.getEvent(&event);
-          
-          /* Display the results (acceleration is measured in m/s^2) */
-          Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
-          Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
-          Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
-          Serial.print(" m/s^2 ");
-      }
+    return accelMagnitude;
     
-      Serial.println();
-  }
-  movement = (abs(lis.x) + abs(lis.y) + abs(lis.z));  // normallize the movement such that sitting on a table is ~7600.
-  
- }
-//#####################################################
+}
 
-
-
+/***********************************************************************/
+/***********************************************************************/
+// Main loop
+// This main loop is used as a poor-man's RTOS. Since the RH_RF69 library
+// uses a ton of the M0's timers (and the timer configuration seems highly
+// variable from chipset to chipset), we can't easily use built in timers
+// to trigger all the actions we want. Also, we don't need most of these
+// actions to have high precision timing... just basically within a few
+// tens of milliseconds.
+// So... all functions in this loop should be minimally blocking. Anything
+// expected to take more than 1-2ms should be unrolled in a manner so
+// that the the system can return to the loop().
+/***********************************************************************/
+/***********************************************************************/
 void loop() {
 
     static bool isLEDOn = false;
@@ -710,30 +883,29 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = currentMillis;
-    static unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
-    static unsigned long AccelCheckPeriodMs = 250; // 100ms between checking accel to see if we are moving
+    const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
+    const unsigned long AccelCheckPeriodMs = 250; // Update time between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 480*1000; // how long to wait before giong to still program in ms
-    static int notMovingCounter = 0;
-    static int StillProgram = 21; // pick a program to run when we are still
+    static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
+    const int StillProgram = 21; // pick a program to run when we are still
 
     // Broadcast timing
-    const unsigned long transmitPeriodMs = 10; // how long to wait between broadcasts in ms
+    const unsigned long transmitPeriodMs = 1000; // how long to wait between broadcasts in ms
     const int minRssiThreshold = -80;  // recieve threshold
 
     
     // led program controls
     const unsigned long priorityDecrementPeriodMs = 100;  // decrement the priority every X milliseconds. 100 means decrement the priority every 10ms.
-    const unsigned long minimumProgramTimeMs = 10000;  // Run the current program for atleast 2secs before looking for new program
+    const unsigned long minimumProgramTimeMs = 1000;  // How long to run a program after switching programs
     
     const uint8_t numLedPrograms = 20; // max case id, not count
     const uint8_t defaultLedProgram = 5;
-    static uint8_t overrideProgram ; // for testing, we want a static program
+    static uint8_t overrideProgram = 0; // for testing, we want a static program
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
     
     static int16_t currentProgramPrioity = 50+(minimumProgramTimeMs / priorityDecrementPeriodMs);
-    static int16_t previousProgramPrioity = 0;
     static int8_t requestedProgramPrioity = 0;
     
     static unsigned long ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
@@ -743,20 +915,103 @@ void loop() {
     /***********************************************************************/
 
     if(currentMillis - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
-//        currentProgramPrioity = currentProgramPrioity == 0 ? 0 : --currentProgramPrioity;
-          previousProgramPrioity = currentProgramPrioity;
-          currentProgramPrioity = currentProgramPrioity == 0 ? 0 : (currentProgramPrioity - ((currentMillis - previousPriorityUpdateMillis)/priorityDecrementPeriodMs) );   
-          previousPriorityUpdateMillis = currentMillis;
-
-          digitalWrite(LED_PIN, isLEDOn);
-          isLEDOn = !isLEDOn;
-          
-          char buffer[255];
-          sprintf(buffer, "%ld: prg: %d pri: %d updateWait: %d ms movement: %d still for: %d", currentMillis, currentLedProgram, currentProgramPrioity, ledUpdatePeriodMs, movement, (notMovingCounter * AccelCheckPeriodMs));
-          Serial.println((char*)buffer);
-          
+        // Update the current priority based on how long it's been runnging.
+        // If the priority is 0, just keep it 0
+        currentProgramPrioity = currentProgramPrioity == 0 ? 0 : (currentProgramPrioity - ((currentMillis - previousPriorityUpdateMillis)/priorityDecrementPeriodMs) );
+        // If the priority went negative, fix it to 0
+        currentProgramPrioity = currentProgramPrioity < 0 ? 0 : currentProgramPrioity;
+        // Update priority update timestamp
+        previousPriorityUpdateMillis = currentMillis;
+        
+        // Create a heartbeat LED flash to show we're updating the priority
+        digitalWrite(LED_PIN, isLEDOn);
+        isLEDOn = !isLEDOn;
+        
+        char buffer[255];
+        sprintf(buffer, "%ld: prg: %d pri: %d updateWait: %d ms still for: %d", currentMillis, currentLedProgram, currentProgramPrioity, ledUpdatePeriodMs, notMovingTimer);
+        Serial.println((char*)buffer);
+        
+    }
+    /***********************************************************************/
+    // check Accel to see if we are moving
+    /***********************************************************************/
+    if ((currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs) && (useAccel >= 1)){
+        // update accel check timestamp
+        previousAccelCheckMillis = currentMillis;
+        
+        // get the current accel data
+        int accelMagnitude = ReadAccel();
+        
+        // If the accel data is valid and we have significant movement, time how long we haven't been moving
+        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+            notMovingTimer = (notMovingTimer + (currentMillis - previousAccelCheckMillis));
+        } else {
+            notMovingTimer = 0;  // reset the counter since we are moving again
+            overrideProgram = 0;
+        }
+        
+        // If we haven't been moving for a long time, override the program
+        if (notMovingTimer > notMovingTimeout) {
+            overrideProgram = StillProgram; // go to a low power sparkly program
+            char buffer[255];
+            sprintf(buffer, "%ld: Not Moving! Overriding to prg: %d pri: %d STILL FOR: %d ms", currentMillis, overrideProgram, currentProgramPrioity, notMovingTimer);
+            Serial.println((char*)buffer);
+        }
     }
     
+    /***********************************************************************/
+    // Determine what program to run
+    // We can do this as often as we like (no timer limitation)
+    // Since it will only come into effect when there is an override or
+    // there is a new packet recv'd
+    /***********************************************************************/
+    /***********************************************************************/
+    // Program change
+    // if there is a new program request, change to it if it has a higher
+    // priority than our current priority
+    // if the program changes, we want to run each program for at least 2s,
+    // so we set the new priority to the requested priorty plus 2 *priorityDecrementPeriodMs
+    /***********************************************************************/
+    // check to see if there is a new program requested
+    // and that the request has a higher priority than our current priority
+    if(requestedProgramPrioity > currentProgramPrioity){
+        // change the led program
+        currentLedProgram = requestedLedProgram;
+        previousLedProgram = currentLedProgram;
+        // set the priority so it runs at least as long as our minimum
+        currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
+        
+        // reset the requested info
+        requestedProgramPrioity = 0;
+        requestedLedProgram = 0;
+        
+        char buffer[255];
+        sprintf(buffer, "%ld: Changing Higher Priorty Prg prg: %d pri: %d", currentMillis, currentLedProgram, currentProgramPrioity);
+        Serial.println((char*)buffer);
+        
+        // give the new program a blank slate to play with
+        resetAllLedProgramStates();
+    }
+    
+    // if there is an override program number use that program.
+    if (overrideProgram != 0) {
+        // if this is the first time here, save the program history so we can switch back
+        if(currentLedProgram != overrideProgram) {
+            previousLedProgram = currentLedProgram;
+            char buffer[255];
+            sprintf(buffer,"%d: Overiding Program! prg: %d", currentMillis, overrideProgram);
+            Serial.println((char*)buffer);
+        }
+        
+        // override the current program
+        currentLedProgram = overrideProgram;
+    }
+    else {
+        // if we're not overriding the program anymore, restore the previous program
+        // since we might have recieved a new program request since we were last moving
+        // the new program might be different than it was when we went to override
+        currentLedProgram = previousLedProgram;
+    }
     
     /***********************************************************************/
     // Led update
@@ -766,189 +1021,106 @@ void loop() {
         // update the previous time record
         previousLedUpdateMillis = currentMillis;
         
-        /***********************************************************************/
-        // Program change
-        // if there is a new program request, change to it if it has a higher
-        // priority than our current priority
-        // if the program changes, we want to run each program for at least 2s,
-        // so we set the new priority to the requested priorty plus 2 *priorityDecrementPeriodMs
-        /***********************************************************************/
-        // check to see if there is a new program requested
-        // and that the request has a higher priority than our current priority
-        if(requestedProgramPrioity > currentProgramPrioity){
-            // change the led program
-            currentLedProgram = requestedLedProgram;
-            // set the priority so it runs at least as long as our minimum
-            currentProgramPrioity = requestedProgramPrioity + (minimumProgramTimeMs / priorityDecrementPeriodMs);
-            
-            // if the new program is the same as it was last time, increment so we get more changes
-//            if(currentLedProgram == previousLedProgram) currentLedProgram++;
-            
-            // reset the requested info
-            requestedProgramPrioity = 0;
-            requestedLedProgram = 0;
-            
-            char buffer[255];
-            sprintf(buffer, "%ld: Changing Higher Priorty Prg prg: %d pri: %d", currentMillis, currentLedProgram, currentProgramPrioity);
-            Serial.println((char*)buffer);
-
-            setAll (0,0,0); // clear all LEDs by setting them to off
-        }
-        else {
-            // if there isn't a higher priority, run the previous program
-            currentLedProgram = previousLedProgram;
-        }
-
-// check Accel to see if we are moving
-        if ((currentMillis - previousAccelCheckMillis >= AccelCheckPeriodMs) && (useAccel >= 1)){
-
-            ReadAccel();  // get the current accel data
-            if ((movement < MovementThreshold) && (movement > 0)) {  // looks like we aren't moving... and we have a functioning accel... start counting
-                notMovingCounter = (notMovingCounter + (currentMillis - previousAccelCheckMillis)/AccelCheckPeriodMs) ;
-                                
-                char buffer[255];
-                
-                if (notMovingCounter * AccelCheckPeriodMs > notMovingTimeout) {  // we haven't been moving past our timeout, change to static program
-                    overrideProgram = StillProgram; // go to a low power sparkly program
-                    sprintf(buffer, "%ld: Not Moving! Overriding to prg: %d pri: %d STILL FOR: %d ms", currentMillis, overrideProgram, currentProgramPrioity, (notMovingCounter * AccelCheckPeriodMs));
-                    Serial.println((char*)buffer);
-
-                }
-            } else {
-                notMovingCounter = 0;  // reset the counter since we are moving again
-                overrideProgram = 0;
-            }
-            
-            previousAccelCheckMillis = currentMillis;  // update the previous time record
-        }
-
-        static int selectedProgram;
-
-        if (overrideProgram != 0) {   // if there is an override program number use that program.
-            selectedProgram = overrideProgram;
-            char buffer[255];
-            sprintf(buffer,"%d: Overiding Program! prg: %d", currentMillis, overrideProgram);
-            Serial.println((char*)buffer);
-        } else {
-            selectedProgram = currentLedProgram;
-        }
-        
-        switch(selectedProgram){
+        // play the current LED program
+        switch(currentLedProgram){
             default:
                 Serial.println("unknown LED program");
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
-                ledUpdatePeriodMs = 0;
-                colorWipe (0, 150, 0, 3); // Red
-                colorWipe (0,0,0, 1); // wipe to black
+                ledUpdatePeriodMs = 3;
+                colorWipe (0, 150, 0);
                 break;
             case 1: // green color wipe
-                ledUpdatePeriodMs = 0;
-                colorWipe (150, 0, 0, 3); // Grean
-                colorWipe (0,0,0, 1); // wipe to black
+                ledUpdatePeriodMs = 3;
+                colorWipe (150, 0, 0);
                 break;
             case 2: // blue color wipe
-                ledUpdatePeriodMs = 0;
-                colorWipe (0, 0, 150, 3); // Blue
-                colorWipe (0,0,0, 1); // wipe to black
+                ledUpdatePeriodMs = 3;
+                colorWipe (0, 0, 150);
                 break;
             case 3: // purple color wipe
-                ledUpdatePeriodMs = 0;
-                colorWipe (0, 75, 75, 3); // Purple
-                colorWipe (0,0,0, 1); // wipe to black
+                ledUpdatePeriodMs = 3;
+                colorWipe (0, 75, 75);
                 break;
             case 4: // rainbow
                 ledUpdatePeriodMs = 10;
-                rainbow(10); // rainbow
+                rainbow(); // rainbow
                 break;
             case 5: // rainbowCycle
                 ledUpdatePeriodMs = 10;
-                rainbowCycle(10); // rainbowCyle: delay
+                rainbowCycle();
                 break;
             case 6: // blue color chase
-                ledUpdatePeriodMs = 10;
-                theaterChase(strip.Color(0, 0, 255), 50); // Chase Blue
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 0, 255));
                 break;
             case 7: // red color chase
-                ledUpdatePeriodMs = 10;
-                theaterChase(strip.Color(0, 255, 0), 50); // Chase red
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 255, 0));
                 break;
             case 8: // green color chase
-                ledUpdatePeriodMs = 10;
-                theaterChase(strip.Color(255, 0, 0), 50); // Chase green
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(255, 0, 0));
                 break;
             case 9: // purple color chase
-                ledUpdatePeriodMs = 10;
-                theaterChase(strip.Color(0, 75, 75), 50); // Chase purple
+                ledUpdatePeriodMs = 50;
+                theaterChase(strip.Color(0, 75, 75));
                 break;
             case 10: // color chase
-                ledUpdatePeriodMs = 10;
-                theaterChaseRainbow(50); // Chase rainbow
+                ledUpdatePeriodMs = 50;
+                theaterChaseRainbow();
                 break;
             case 11: // poice mode
-                ledUpdatePeriodMs = 1;
-                policeMode(100); // Police Mode variable: wait between switching colors
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = policeMode();
                 break;
             case 12: // china poice mode
-                ledUpdatePeriodMs = 1;
-                policeChinaMode2(10,20,300); // china Police Mode variable: wait between switching colors
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = policeChinaMode2(10,20,300, false); // china Police Mode variable: wait between switching colors
                 break;
-           
             case 13: // china poice mode Half of the strip
-                ledUpdatePeriodMs = 1;
-                policeChinaModeHalf2 (10, 20, 300); // china Police Mode Half and Half variable: // int StrobeCount, int FlashDelay, int EndPause)
+                // int StrobeCount, int FlashDelay, int EndPause, bool halfString
+                ledUpdatePeriodMs = policeChinaMode2 (10, 20, 300, true); // china Police Mode Half and Half variable:
                 break;
-           
             case 14: // color wipe random color and back to black
-                ledUpdatePeriodMs = 0;
-                colorWipe ((random(0,200)),(random(0,100)),(random(0,200)), 3);  // random color 
-                colorWipe (0,0,0, 1); // wipe to black
+                ledUpdatePeriodMs = 3;
+                colorWipe ((random(0,200)),(random(0,100)),(random(0,200)));
                 break;
-                
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
-                ledUpdatePeriodMs = 1;
-                meteorRain(100,255,200, 10, 50, true, 10);
+                ledUpdatePeriodMs = 10;
+                meteorRain(100,255,200, 10, 50, true);
                 break;
-                
-            case 16:  // Strobe! variables: byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause
-                ledUpdatePeriodMs = 1;
-                Strobe(150,100,200, 10, 25, 500);
+            case 16:  // Strobe!
+                // variable update rate based on state of the program
+                // params: byte red, byte green, byte blue, int strobeCount, int flashDelay, int endPause
+                ledUpdatePeriodMs = Strobe(150,100,200, 10, 25, 500);
                 break;
-                
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-                ledUpdatePeriodMs = 0;
-                Fire(55,120,15);
+                ledUpdatePeriodMs = 15;
+                Fire(55,120);
                 break;
-                
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
-                RunningLights(0,150,150, 10);
+                RunningLights(0,150,150);
                 break;
-                
-            case 19: // Sparkle variables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
-                ledUpdatePeriodMs = 0;
-                Sparkle(255, 255, 255, 3, 5, 5);
+            case 19: // Sparkle
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = Sparkle(255, 255, 255, 3, 5, 5);
                 break;
-
             case 20: // Sutro
-                ledUpdatePeriodMs = 0;
-                Sutro (20);
+                ledUpdatePeriodMs = 20;
+                Sutro();
                 break;
-                
             // Sparkle slow is used for when there is no motion
-            case 21: // Sparkle slow ariables: byte red, byte green, byte blue, int SparksPerFlash, int SparkleDelay, int SpeedDelay
-                ledUpdatePeriodMs = 0;
-                Sparkle(150, 150, 150, 2, 10, 200);
+            case 21: // Sparkle slow
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = Sparkle(150, 150, 150, 2, 10, 200);
                 break;
-                
-            case 22: // SparkleDelay variables: byte red, byte green, byte blue, int FadeDelay, int SpeedDelay
-                ledUpdatePeriodMs = 0;
-                //SparkleDecay(255, 255, 255, 5, 0);
-                SparkleDecay((random(0,200)),(random(0,100)),(random(0,200)), 5, 0);
+            case 22: // SparkleDecay
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = SparkleDecay((random(0,200)),(random(0,100)),(random(0,200)), 5, 0);
                 break;
         }
-        
-        previousLedProgram = currentLedProgram;
     }
     
     /***********************************************************************/
@@ -999,7 +1171,8 @@ void loop() {
 
                 }
                 else {
-                    Serial.println("Bad packet");
+                    sprintf(buffer, "Bad packet. Found %d items. %s", numFound, data);
+                    Serial.println(buffer);
                 }
             } // end if rssi threshold
         } // end if recv packet
