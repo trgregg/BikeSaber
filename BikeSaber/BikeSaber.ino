@@ -433,7 +433,7 @@ uint16_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
                 if (g_LedProgramColor == colorsForFlashing[0]){
                     g_LedProgramColor = colorsForFlashing[1];  // blue
                 } else {
-                    g_LedProgramColor == colorsForFlashing[0]; // dim red
+                    g_LedProgramColor = colorsForFlashing[0]; // dim red
                 }
             }
             break;
@@ -932,8 +932,9 @@ void loop() {
         isLEDOn = !isLEDOn;
         
         char buffer[255];
-        sprintf(buffer, "%ld: prg: %d pri: %d updateWait: %d ms (lateMs:%d) still for: %d", millis(),
-                currentLedProgram, currentProgramPrioity, ledUpdatePeriodMs, priorityUpdateLateMs, notMovingTimer);
+        sprintf(buffer, "%ld %d %d: ledDelay: %dms; priDecLate: %dms stillTime: %d",
+                millis(), currentLedProgram, currentProgramPrioity,
+                ledUpdatePeriodMs, priorityUpdateLateMs, notMovingTimer);
         Serial.println((char*)buffer);
         
     }
@@ -959,7 +960,9 @@ void loop() {
         if (notMovingTimer > notMovingTimeout) {
             overrideProgram = StillProgram; // go to a low power sparkly program
             char buffer[255];
-            sprintf(buffer, "%ld: Not Moving! Overriding to prg: %d pri: %d STILL FOR: %d ms", millis(), overrideProgram, currentProgramPrioity, notMovingTimer);
+            sprintf(buffer, "%ld %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
+                    millis(), currentLedProgram, currentProgramPrioity,
+                    notMovingTimer, overrideProgram, currentProgramPrioity);
             Serial.println((char*)buffer);
         }
     }
@@ -983,6 +986,12 @@ void loop() {
         // change the led program
         currentLedProgram = requestedLedProgram;
         previousLedProgram = currentLedProgram;
+        
+        char buffer[255];
+        sprintf(buffer, "%ld %d %d: Changing program %d > %d", millis(),
+                currentLedProgram, currentProgramPrioity, requestedProgramPrioity, currentProgramPrioity);
+        Serial.println((char*)buffer);
+        
         // set the priority so it runs at least as long as our minimum
         currentProgramPrioity = requestedProgramPrioity + minimumProgramTimeMs;
         
@@ -990,9 +999,7 @@ void loop() {
         requestedProgramPrioity = 0;
         requestedLedProgram = 0;
         
-        char buffer[255];
-        sprintf(buffer, "%ld: Changing Higher Priorty Prg prg: %d pri: %d", millis(), currentLedProgram, currentProgramPrioity);
-        Serial.println((char*)buffer);
+        
         
         // give the new program a blank slate to play with
         resetAllLedProgramStates();
@@ -1004,7 +1011,8 @@ void loop() {
         if(currentLedProgram != overrideProgram) {
             previousLedProgram = currentLedProgram;
             char buffer[255];
-            sprintf(buffer,"%d: Overiding Program! prg: %d", millis(), overrideProgram);
+            sprintf(buffer,"%d %d %d: Overiding to %d", millis(), currentLedProgram,
+                    currentProgramPrioity, overrideProgram);
             Serial.println((char*)buffer);
         }
         
@@ -1136,7 +1144,8 @@ void loop() {
     /***********************************************************************/
     if (testMode == 10) {  // etra logging to see how often we are checking for packets
         char buffer[255];
-        sprintf(buffer, "%ld: Looking for Received Packets", millis());
+        sprintf(buffer, "%ld %d %d: Looking for Received Packets", millis(), currentLedProgram,
+                currentProgramPrioity);
         Serial.println(buffer);
     }
 
@@ -1146,19 +1155,21 @@ void loop() {
         int lastRssi = -100;
         uint8_t len=255;
 
-        memset(&packet, 0, RH_RF69_MAX_MESSAGE_LEN);
+        memset(packet, 0, RH_RF69_MAX_MESSAGE_LEN);
         memset(buffer, 0, 255);
         
         // read in the packet
         // note that the packet length does not appear to be valid in most cases
         bool validPacket = rf69.recv((uint8_t*)packet, &len);
+        //null terminate just in case since we treat this like a char*
+        packet[len] ='\0';
         
         if (validPacket && len > 3) {
-            //null terminate just in case since we treat this like a char*
-            packet[len] ='\0';
             lastRssi = rf69.lastRssi();
             
-            sprintf(buffer, "%ld: Received Packet Rssi: %d len: %d \"%s\" ", millis(), lastRssi, len, (char*)packet );
+            sprintf(buffer, "%ld %d %d: Rxd. RSSI: %d len: %d \"%s\" ",
+                    millis(), currentLedProgram, currentProgramPrioity, lastRssi,
+                    len, (char*)packet );
             Serial.println(buffer);
 
             char *data = (char*)packet;
@@ -1176,21 +1187,23 @@ void loop() {
                     requestedProgramPrioity =  (int32_t) tempPriority;
                     requestedLedProgram =  (uint8_t) tempProgram;
 
-                    sprintf(buffer, "%ld: Got request: %d %d", millis(), requestedLedProgram, requestedProgramPrioity);
+                    sprintf(buffer, "%ld %d %d: Decoded: %d %d", millis(),
+                            currentLedProgram, currentProgramPrioity,
+                            requestedLedProgram, requestedProgramPrioity);
                     Serial.println(buffer);
 
                 }
                 else {
-                    sprintf(buffer, "%ld: Bad packet. Found %d items. %s", millis(), numFound, data);
+                    sprintf(buffer, "%ld %d %d: Bad decode. Found %d items. \"%s\"",
+                            millis(), currentLedProgram, currentProgramPrioity, numFound, data);
                     Serial.println(buffer);
                 }
             } // end if rssi threshold
         } // end if recv packet
         else {
             char buffer[255];
-            sprintf(buffer, "%ld: Packet receive failed. len: %d", millis(), len);
-            Serial.println(buffer);
-            sprintf(buffer, "%ld: Bad packet: \"%s\"", millis(), (char*)packet);
+            sprintf(buffer, "%ld %d %d: Bad rx. len: %d; \"%s\"", millis(),
+                    currentLedProgram, currentProgramPrioity, len, (char*)packet);
             Serial.println(buffer);
             lastRssi = -100;
         }  // end else recv packet
@@ -1214,14 +1227,23 @@ void loop() {
             int32_t tempPriority = (int32_t)(random(0, minimumProgramTimeMs));
             uint8_t tempProgram = (uint8_t)random(0, numLedPrograms + 1); //min inclusive, max exclusive
             
-            sprintf(buffer, "%ld: Sending random prg:%d pri:%d Previous Transmit: %d ms (%d late)", millis(), tempProgram, tempPriority, (millis() - previousTransmitMillis), ((millis() - previousTransmitMillis) - transmitPeriodMs ));
+            sprintf(buffer, "%ld %d %d: Sending %d %d; last tx: %dms (%d late)",
+                    millis(), currentLedProgram, currentProgramPrioity,
+                    tempProgram, tempPriority, (millis() - previousTransmitMillis),
+                    ((millis() - previousTransmitMillis) - transmitPeriodMs ));
             Serial.println(buffer);
 
-            sprintf(radiopacket, "%d %d", requestedLedProgram, requestedProgramPrioity);
+            sprintf(radiopacket, "%d %ld", tempProgram, tempPriority);
             // Send a message!
             rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
             rf69.waitPacketSent();
-            sprintf(buffer, "%ld: Sent.", millis());
+            
+            // put the radio back in rx mode
+            // go through idle mode to try to clear any rx buffers
+            //rf69.setModeIdle();
+            rf69.setModeRx();
+            
+            sprintf(buffer, "%ld %d %d: Sent.", millis(), currentLedProgram, currentProgramPrioity);
             Serial.println(buffer);
             
             // if the transmitted priority is higher, use it as the new requested
@@ -1230,7 +1252,9 @@ void loop() {
             
         } else {
             // Log that we we aren't transmitting. Normally used when testing just one unit.
-            sprintf(buffer, "%ld: Not transmitting because transmitMode != 1, Previous Transmit: %d ms (%d late)", millis(), (millis() - previousTransmitMillis), ((millis() - previousTransmitMillis) - transmitPeriodMs ));
+            sprintf(buffer, "%ld %d %d: No tx transmitMode != 1, last tx: %dms (%d late)",
+                    millis(), currentLedProgram, currentProgramPrioity,
+                    (millis() - previousTransmitMillis), ((millis() - previousTransmitMillis) - transmitPeriodMs ));
             Serial.println(buffer);
         }
         
@@ -1239,7 +1263,9 @@ void loop() {
             if (requestedLedProgram >= numLedPrograms) {requestedLedProgram = 0;}
             
             requestedProgramPrioity =  minimumProgramTimeMs;
-            sprintf(buffer, "%ld: Test Mode Requesting Next Prg prg:%d pri:%d ", millis(), requestedLedProgram, requestedProgramPrioity);
+            sprintf(buffer, "%ld %d %d: Test Mode req:%d %d",
+                    millis(), currentLedProgram, currentProgramPrioity,
+                    requestedLedProgram, requestedProgramPrioity);
             Serial.println(buffer);
         }
         
