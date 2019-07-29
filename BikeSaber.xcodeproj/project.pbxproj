@@ -1809,7 +1809,8 @@
 				35C74BD0210806A1007E4210 /* library.properties */,
 				35C74BD1210806A1007E4210 /* .travis.yml */,
 			);
-			path = Adafruit_NeoPixel;
+			name = Adafruit_NeoPixel;
+			path = ../Adafruit_NeoPixel;
 			sourceTree = "<group>";
 		};
 		35C74BBA210806A1007E4210 /* examples */ = {
@@ -3643,7 +3644,7 @@
 				AAAA180718174602AA00032F /* RadioHead */,
 			);
 			name = libraries;
-			path = /Users/jlgregg/Documents/Code/Arduino/libraries;
+			path = ../../../../../../../../../Users/jlgregg/Documents/Arduino/libraries/RadioHead;
 			sourceTree = SDKROOT;
 		};
 		AAAA180718174602AA00032F /* RadioHead */ = {
