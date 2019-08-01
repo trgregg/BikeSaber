@@ -1221,7 +1221,7 @@ void loop() {
     // if this new priority is higher than the current priority, switch our
     // current program
     /***********************************************************************/
-    if (millis() - previousTransmitMillis >= transmitPeriodMs ); // + (random(0, 10))){
+    if (millis() - previousTransmitMillis >= transmitPeriodMs ) { // + (random(0, 10))){
         char buffer[255];
         
         if (transmitMode == 1) {
