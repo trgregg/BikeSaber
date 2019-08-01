@@ -97,7 +97,7 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 
 // Define variables and constants
-const int lessLight = 0;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
+const int lessLight = 1;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
@@ -651,7 +651,12 @@ void Sutro(){
     strip.fill(RedColor, int(strip.numPixels()/2)+g_LedProgramCurrentPixel,
                int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel); // top 1/2-3/4 is red
     strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
-    
+    if( lessLight == 1) {
+        for(int i=0; i< strip.numPixels(); i++) {
+          i++;
+          strip.setPixelColor(i, strip.Color(0, 0, 0));
+        }
+    }
     strip.show();
 }
 
@@ -1216,7 +1221,7 @@ void loop() {
     // if this new priority is higher than the current priority, switch our
     // current program
     /***********************************************************************/
-    if (millis() - previousTransmitMillis >= transmitPeriodMs){
+    if (millis() - previousTransmitMillis >= transmitPeriodMs ); // + (random(0, 10))){
         char buffer[255];
         
         if (transmitMode == 1) {
