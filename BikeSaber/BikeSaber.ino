@@ -92,6 +92,10 @@
 // Accelerometer via I2C
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
+// Time of Flight Sensor
+#include "Adafruit_VL6180X.h"
+Adafruit_VL6180X vl = Adafruit_VL6180X();
+
 
 // Define structures and classes
 
@@ -101,6 +105,8 @@ const int lessLight = 1;  // use this for longer strings. It will disable every 
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
+static int useToF = 1; // we will set this to 0 if we can't find Time of Flight sensor 
+
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -210,6 +216,14 @@ void setup()
       Serial.print("Range = "); Serial.print(2 << lis.getRange());  
       Serial.println("G");
     }
+
+///////// setup Time of Flight stuff
+    Serial.println("Adafruit VL6180x test!");
+    if (! vl.begin()) {
+      Serial.println("Failed to find ToF. Continuing without it.");
+      useToF = 0;
+    }
+    Serial.println("ToF found!");
 
     
 ////// Setup the NeoPixel string
@@ -864,6 +878,22 @@ int ReadAccel() {
 }
 
 /***********************************************************************/
+// Read the Time of Flight distance to override program
+/***********************************************************************/
+int ReadToF() {
+    uint8_t range = vl.readRange();
+    uint8_t status = vl.readRangeStatus();
+
+    if (status != VL6180X_ERROR_NONE) { range = 0;}
+	
+	if (testMode >= 2) {Serial.print("Range: "); Serial.println(range);}
+	
+    return range;
+    
+}
+
+
+/***********************************************************************/
 /***********************************************************************/
 // Main loop
 // This main loop is used as a poor-man's RTOS. Since the RH_RF69 library
@@ -947,30 +977,70 @@ void loop() {
     /***********************************************************************/
     // check Accel to see if we are moving
     /***********************************************************************/
-    if ((millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) && (useAccel >= 1)){
+    if (millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) {
         // update accel check timestamp
         previousAccelCheckMillis = millis();
+		
+		if (useAccel >= 1){
         
-        // get the current accel data
-        int accelMagnitude = ReadAccel();
+	        // get the current accel data
+	        int accelMagnitude = ReadAccel();
         
-        // If the accel data is valid and we have significant movement, time how long we haven't been moving
-        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
-            notMovingTimer = (notMovingTimer + (millis() - previousAccelCheckMillis));
-        } else {
-            notMovingTimer = 0;  // reset the counter since we are moving again
-            overrideProgram = 0;
-        }
+	        // If the accel data is valid and we have significant movement, time how long we haven't been moving
+	        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+	            notMovingTimer = (notMovingTimer + (millis() - previousAccelCheckMillis));
+	        } else {
+	            notMovingTimer = 0;  // reset the counter since we are moving again
+	            overrideProgram = 0;
+	        }
         
-        // If we haven't been moving for a long time, override the program
-        if (notMovingTimer > notMovingTimeout) {
-            overrideProgram = StillProgram; // go to a low power sparkly program
-            char buffer[255];
-            sprintf(buffer, "%ld %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
-                    millis(), currentLedProgram, currentProgramPrioity,
-                    notMovingTimer, overrideProgram, currentProgramPrioity);
-            Serial.println((char*)buffer);
-        }
+	        // If we haven't been moving for a long time, override the program
+	        if (notMovingTimer > notMovingTimeout) {
+	            overrideProgram = StillProgram; // go to a low power sparkly program
+	            char buffer[255];
+	            sprintf(buffer, "%ld %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
+	                    millis(), currentLedProgram, currentProgramPrioity,
+	                    notMovingTimer, overrideProgram, currentProgramPrioity);
+	            Serial.println((char*)buffer);
+	        }
+		}
+		
+		// While we are here... Check the Time of Flight sensor for possible overrides
+		if (useToF >= 1) {
+			int distance = ReadToF();
+			
+			if (distance > 5 && distance < 400) {
+				// looks like we have a valid reading. This means something is infront of the sensor, so let's override the program.
+
+			    if (distance < 20) { overrideProgram = 1;}
+			    else if (distance < 40)  { overrideProgram = 1;}
+				else if (distance < 60)  { overrideProgram = 2;}
+				else if (distance < 80)  { overrideProgram = 3;}
+				else if (distance < 100)  { overrideProgram = 4;}
+				else if (distance < 120)  { overrideProgram = 5;}
+				else if (distance < 140)  { overrideProgram = 6;}
+				else if (distance < 160)  { overrideProgram = 7;}
+				else if (distance < 180)  { overrideProgram = 8;}
+				else if (distance < 200)  { overrideProgram = 9;}
+				else if (distance < 220)  { overrideProgram = 10;}
+				else if (distance < 240)  { overrideProgram = 11;}
+				else if (distance < 260)  { overrideProgram = 12;}
+				else if (distance < 280)  { overrideProgram = 13;}
+				else if (distance < 300)  { overrideProgram = 14;}
+				else if (distance < 320)  { overrideProgram = 15;}
+				else if (distance < 340)  { overrideProgram = 16;}
+				else if (distance < 360)  { overrideProgram = 17;}
+				else if (distance < 380)  { overrideProgram = 18;}
+				else if (distance < 400)  { overrideProgram = 19;}
+		        char buffer[255];
+		        sprintf(buffer, "%ld %d %d: TimeOfFlight Override %d. overridePrg: %d %d",
+			        millis(), currentLedProgram, currentProgramPrioity,
+			        distance, overrideProgram, currentProgramPrioity);
+      
+			} else { overrideProgram = 0;}
+     	
+		}
+	
     }
     
     /***********************************************************************/
