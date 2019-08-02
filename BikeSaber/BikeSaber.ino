@@ -310,6 +310,7 @@ void colorWipe(uint32_t c) {
     }
     
     // move to the next pixel
+	if ( lessLight > 1 ) { g_LedProgramCurrentPixel= g_LedProgramCurrentPixel + lessLight;} // Skip pixels if we want less light
     g_LedProgramCurrentPixel++;
     
     // if we've filled the strip, flip on/off and refill
@@ -336,7 +337,7 @@ uint16_t policeMode() {
         case 0: // red color wipe
             g_LedProgramState++;
             for(int i=0; i < (strip.numPixels()); i++){
-                if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel
+                if ( lessLight > 0 ) { i=i+lessLight;}   //turn off every other pixel
                 strip.setPixelColor(i, strip.Color(0, 200, 0));
             }
             strip.show();
@@ -350,7 +351,7 @@ uint16_t policeMode() {
         case 2: // blue color wipe
             g_LedProgramState++;
             for(int i=0; i < (strip.numPixels()); i++){
-                if ( lessLight == 1 ) { i=i+1;}   //turn off every other pixel
+                if ( lessLight > 0 ) { i=i+lessLight;}   //turn off every other pixel
                 strip.setPixelColor(i, strip.Color(0, 0, 200));
             }
             strip.show();
@@ -453,7 +454,7 @@ uint16_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
 void rainbow() {
     // set each LED to an increment color from wheel; this makes a rainbow
     for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
-        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
+        if ( lessLight > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel((i+g_LedProgramColor) & 255));
     }
     
@@ -473,7 +474,7 @@ void rainbow() {
 
 void rainbowCycle() {
     for(uint16_t i=0; i< strip.numPixels(); i=i+1) {
-        if ( lessLight == 1 ) { strip.setPixelColor(i, 0); i=i+1;}   //turn off every other pixel
+        if ( lessLight > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + g_LedProgramColor) & 255));
     }
 
@@ -651,8 +652,8 @@ void Sutro(){
     strip.fill(RedColor, int(strip.numPixels()/2)+g_LedProgramCurrentPixel,
                int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel); // top 1/2-3/4 is red
     strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
-    if( lessLight == 1) {
-        for(int i=0; i< strip.numPixels(); i++) {
+    if( lessLight > 0) {
+        for(int i=0; i< strip.numPixels(); i+lessLight) {
           i++;
           strip.setPixelColor(i, strip.Color(0, 0, 0));
         }
