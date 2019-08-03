@@ -264,7 +264,6 @@ void setAll(byte red, byte green, byte blue) {  // This utility makes it easier 
 void fadeToBlack(int ledNo, byte fadeValue) {
     uint32_t oldColor;
     uint8_t r, g, b;
-    int value;
     
     oldColor = strip.getPixelColor(ledNo);
     r = (oldColor & 0x00ff0000UL) >> 16;
@@ -344,8 +343,8 @@ void colorWipe(byte red, byte green, byte blue) {
 // Police Mode
 // Flash Red-Blue on the full string
 /***********************************************************************/
-uint16_t policeMode() {
-    uint16_t delayForNextUpdateMs = 100;
+uint32_t policeMode() {
+    uint32_t delayForNextUpdateMs = 100;
     switch(g_LedProgramState){
         default:
         case 0: // red color wipe
@@ -385,11 +384,11 @@ uint16_t policeMode() {
 // China Police Mode with full or half string modes
 // Fast strobe on red; pause; fast strobe on blue; pause
 /***********************************************************************/
-uint16_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool halfString) {
+uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool halfString) {
     // use g_LedProgramCurrentPixel as a strobe counter
     // use g_LedProgramState for state machine state
     // use g_LedProgramColor for current color
-    uint16_t delayForNextUpdateMs = 10;
+    uint32_t delayForNextUpdateMs = 10;
     const uint32_t colorsForFlashing[2] = {strip.Color(0, 150, 0), strip.Color(0, 0, 255)};
     switch(g_LedProgramState){
         default:
@@ -556,7 +555,7 @@ void theaterChaseRainbow() {
 // Meteor rain
 // make it rain glowing rocks
 /***********************************************************************/
-uint16_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
+uint32_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
     // use g_LedProgramCurrentPixel for meteor position
     // use g_LedProgramState for initialization flag
     
@@ -595,12 +594,12 @@ uint16_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteo
 // Strobe
 // Flashy all the string with one color
 /***********************************************************************/
-uint16_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay, int endPause){
+uint32_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay, int endPause){
     // use g_LedProgramState for on/off/pause state
     // use g_LedProgramCurrentPixel as a strobe counter
     
     uint32_t strobeColor = strip.Color(red, green, blue);
-    uint16_t delayForNextUpdateMs = flashDelay;
+    uint32_t delayForNextUpdateMs = flashDelay;
     
     switch(g_LedProgramState){
         default:
@@ -704,7 +703,7 @@ void Fire(int Cooling, int Sparking) {
     
     // Step 1.  Cool down every cell a little
     for( int i = 0; i < strip.numPixels(); i++) {
-        cooldown = random(0, ((Cooling * 10) / strip.numPixels()) + 2);
+        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + 2);
         
         if(cooldown>heat[i]) {
             heat[i]=0;
@@ -720,7 +719,7 @@ void Fire(int Cooling, int Sparking) {
     
     // Step 3.  Randomly ignite new 'sparks' near the bottom
     if( random(255) < Sparking ) {
-        int y = random(7);
+        int y = (int)random(7);
         heat[y] = heat[y] + random(160,255);
         //heat[y] = random(160,255);
     }
@@ -758,12 +757,12 @@ void RunningLights(byte red, byte green, byte blue) {
 // Sparkles Decay
 // Sparkles that fade to black slowly
 /***********************************************************************/
-uint16_t SparkleDecay(int red, int green, int blue, int fadeDelay, int endPause) {
+uint32_t SparkleDecay(int red, int green, int blue, int fadeDelay, int endPause) {
 
     // use g_LedProgramState for on/off/pause state control
     // use g_LedProgramCurrentPixel for tracking which pixels are sparkling
     static uint8_t fadeCount = 0;
-    uint16_t delayForNextUpdateMs = fadeDelay;
+    uint32_t delayForNextUpdateMs = fadeDelay;
     
     switch (g_LedProgramState) {
         default:
@@ -813,10 +812,10 @@ uint16_t SparkleDecay(int red, int green, int blue, int fadeDelay, int endPause)
 // Sparkle
 // turn on several groups of pixels and then turn everything off
 /***********************************************************************/
-uint16_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
+uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
     
     // use g_LedProgramState for on/off state tracking
-    uint16_t delayForNextUpdateMs = sparkleDelay;
+    uint32_t delayForNextUpdateMs = sparkleDelay;
     
     switch(g_LedProgramState){
         default:
@@ -826,7 +825,7 @@ uint16_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
         case 0: // on
             // turn on several groups of pixels
             for (int i = 0; i < sparksPerFlash; i++) {
-                int Pixel = random(strip.numPixels());
+                int Pixel = (int)random(strip.numPixels());
                 setPixel(Pixel-1,red,green,blue);
                 setPixel(Pixel,red,green,blue);
                 setPixel(Pixel+1,red,green,blue);
@@ -910,14 +909,15 @@ int ReadToF() {
 void loop() {
 
     static bool isLEDOn = false;
-     
-    // current time info
-    //unsigned long currentMillis = millis();
+
+    // Logging control
+    uint8_t logToSerial = 0;
     
     // timer statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
     static unsigned long previousTransmitMillis = 0;
     static unsigned long previousPriorityUpdateMillis = 0;
+    static unsigned long previousHeartBeatUpdateMillis = 0;
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
@@ -933,7 +933,8 @@ void loop() {
 
     
     // led program controls
-    const unsigned long priorityDecrementPeriodMs = 100;  // decrement the priority every X milliseconds. 100 means decrement the priority every 10ms.
+    const unsigned long heartBeatLedPeriodMs = 100; // period for flashing the heartbeat LED
+    const unsigned long priorityDecrementPeriodMs = 1;  // decrement the priority every X milliseconds
     const unsigned long minimumProgramTimeMs = 5000;  // How long to run a program after switching programs
     
     const uint8_t numLedPrograms = 20; // max case id, not count
@@ -943,67 +944,52 @@ void loop() {
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
     
-    static int32_t currentProgramPrioity = 50+minimumProgramTimeMs;
+    static int32_t currentProgramPrioity = minimumProgramTimeMs; // need to be allowed to go negative
     static int32_t requestedProgramPrioity = 0;
     
-    static unsigned long ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
+    static uint32_t ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
     
     /***********************************************************************/
-    // Program priority update
-    // priority is simply how long to play the program in ms
+    // Flash the heartbeat led to show the program is still running
     /***********************************************************************/
-
-    if(millis() - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
-        uint16_t priorityUpdateLateMs = (millis() - previousPriorityUpdateMillis) - priorityDecrementPeriodMs;
-        // Update the current priority based on how long it's been runnging.
-        // If the priority is 0, just keep it 0
-        currentProgramPrioity = currentProgramPrioity == 0 ? 0 : (currentProgramPrioity - (millis() - previousPriorityUpdateMillis));
-        // If the priority went negative, fix it to 0
-        currentProgramPrioity = currentProgramPrioity < 0 ? 0 : currentProgramPrioity;
-        // Update priority update timestamp
-        previousPriorityUpdateMillis = millis();
-        
+    if(millis() - previousHeartBeatUpdateMillis >= heartBeatLedPeriodMs){
         // Create a heartbeat LED flash to show we're updating the priority
         digitalWrite(LED_PIN, isLEDOn);
         isLEDOn = !isLEDOn;
-        
-        char buffer[255];
-        sprintf(buffer, "%ld %d %d: ledDelay: %dms; priDecLate: %dms stillTime: %d",
-                millis(), currentLedProgram, currentProgramPrioity,
-                ledUpdatePeriodMs, priorityUpdateLateMs, notMovingTimer);
-        Serial.println((char*)buffer);
-        
+        previousHeartBeatUpdateMillis = millis();
     }
+    
     /***********************************************************************/
     // check Accel to see if we are moving
     /***********************************************************************/
     if (millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) {
         // update accel check timestamp
         previousAccelCheckMillis = millis();
-		
+        
 		if (useAccel >= 1){
         
-	        // get the current accel data
-	        int accelMagnitude = ReadAccel();
+        // get the current accel data
+        int accelMagnitude = ReadAccel();
         
-	        // If the accel data is valid and we have significant movement, time how long we haven't been moving
-	        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
-	            notMovingTimer = (notMovingTimer + (millis() - previousAccelCheckMillis));
-	        } else {
-	            notMovingTimer = 0;  // reset the counter since we are moving again
-	            overrideProgram = 0;
-	        }
+        // If the accel data is valid and we have significant movement, time how long we haven't been moving
+        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+            notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
+        } else {
+            notMovingTimer = 0;  // reset the counter since we are moving again
+            overrideProgram = 0;
+        }
         
-	        // If we haven't been moving for a long time, override the program
-	        if (notMovingTimer > notMovingTimeout) {
-	            overrideProgram = StillProgram; // go to a low power sparkly program
-	            char buffer[255];
-	            sprintf(buffer, "%ld %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
-	                    millis(), currentLedProgram, currentProgramPrioity,
-	                    notMovingTimer, overrideProgram, currentProgramPrioity);
-	            Serial.println((char*)buffer);
-	        }
-		}
+        // If we haven't been moving for a long time, override the program
+        if (notMovingTimer > notMovingTimeout) {
+            overrideProgram = StillProgram; // go to a low power sparkly program
+            if(logToSerial == 1){
+                char buffer[255];
+                sprintf(buffer, "%ld %d %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        notMovingTimer, overrideProgram, currentProgramPrioity);
+                Serial.println((char*)buffer);
+            }
+        }
 		
 		// While we are here... Check the Time of Flight sensor for possible overrides
 		if (useToF >= 1) {
@@ -1043,6 +1029,29 @@ void loop() {
 	
     }
     
+    }
+    
+    /***********************************************************************/
+    // Program priority update
+    // priority is simply how long to play the program in ms
+    /***********************************************************************/
+    if(millis() - previousPriorityUpdateMillis >= priorityDecrementPeriodMs){
+        // Update the current priority based on how long it's been runnging.
+        currentProgramPrioity = (int32_t)((uint32_t)currentProgramPrioity - (millis() - previousPriorityUpdateMillis));
+        
+        // Update priority update timestamp
+        previousPriorityUpdateMillis = millis();
+        
+        // if(logToSerial == 1){
+        //        char buffer[255];
+        //        uint16_t priorityUpdateLateMs = (uint16_t)((millis() - previousPriorityUpdateMillis) - priorityDecrementPeriodMs);
+        //        sprintf(buffer, "%ld %d %d %d: ledDelay: %dms; priDecLate: %dms stillTime: %d",
+        //                millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity
+        //                ledUpdatePeriodMs, priorityUpdateLateMs, notMovingTimer);
+        //        Serial.println((char*)buffer);
+        // }
+        
+    }
     /***********************************************************************/
     // Determine what program to run
     // We can do this as often as we like (no timer limitation)
@@ -1058,38 +1067,60 @@ void loop() {
     /***********************************************************************/
     // check to see if there is a new program requested
     // and that the request has a higher priority than our current priority
-    if(requestedProgramPrioity > currentProgramPrioity){
-        // change the led program
-        currentLedProgram = requestedLedProgram;
-        previousLedProgram = currentLedProgram;
-        
+    if(requestedProgramPrioity > currentProgramPrioity ) {
         char buffer[255];
-        sprintf(buffer, "%ld %d %d: Changing program %d > %d", millis(),
-                currentLedProgram, currentProgramPrioity, requestedProgramPrioity, currentProgramPrioity);
-        Serial.println((char*)buffer);
         
-        // set the priority so it runs at least as long as our minimum
-        currentProgramPrioity = requestedProgramPrioity + minimumProgramTimeMs;
+        // if the program is actually changing, reset the state trackers
+        if (currentLedProgram != requestedLedProgram){
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Changing program %d > %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        requestedProgramPrioity, currentProgramPrioity
+                        );
+                Serial.println((char*)buffer);
+            }
+            
+            // give the new program a blank slate to play with
+            resetAllLedProgramStates();
+            
+            // set the priority so it runs at least as long as our minimum
+            currentProgramPrioity = requestedProgramPrioity + minimumProgramTimeMs;
+            
+            // change the led program
+            currentLedProgram = requestedLedProgram;
+            previousLedProgram = currentLedProgram;
+            
+        }
+        else {
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Syncing priority to %d from %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        requestedProgramPrioity, currentProgramPrioity
+                        );
+                Serial.println((char*)buffer);
+            }
+            
+            // if we're not changing programs, just sync the priorities
+            currentProgramPrioity = requestedProgramPrioity;
+        }
         
         // reset the requested info
         requestedProgramPrioity = 0;
         requestedLedProgram = 0;
         
-        
-        
-        // give the new program a blank slate to play with
-        resetAllLedProgramStates();
     }
     
     // if there is an override program number use that program.
     if (overrideProgram != 0) {
         // if this is the first time here, save the program history so we can switch back
         if(currentLedProgram != overrideProgram) {
-            previousLedProgram = currentLedProgram;
-            char buffer[255];
-            sprintf(buffer,"%d %d %d: Overiding to %d", millis(), currentLedProgram,
-                    currentProgramPrioity, overrideProgram);
-            Serial.println((char*)buffer);
+            if(logToSerial == 1){
+                char buffer[255];
+                sprintf(buffer,"%ld %d %d %d: Overiding to %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        overrideProgram);
+                Serial.println((char*)buffer);
+            }
         }
         
         // override the current program
@@ -1113,7 +1144,9 @@ void loop() {
         // play the current LED program
         switch(currentLedProgram){
             default:
-                Serial.println("unknown LED program");
+                if(logToSerial == 1){
+                    Serial.println("unknown LED program");
+                }
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
                 ledUpdatePeriodMs = 3;
@@ -1207,7 +1240,7 @@ void loop() {
                 break;
             case 22: // SparkleDecay
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleDecay((random(0,200)),(random(0,100)),(random(0,200)), 5, 0);
+                ledUpdatePeriodMs = SparkleDecay((int)(random(0,200)),(int)(random(0,100)),(int)(random(0,200)), 5, 0);
                 break;
         }
     }
@@ -1219,10 +1252,12 @@ void loop() {
     // use it as the requested program and priority
     /***********************************************************************/
     if (testMode == 10) {  // etra logging to see how often we are checking for packets
-        char buffer[255];
-        sprintf(buffer, "%ld %d %d: Looking for Received Packets", millis(), currentLedProgram,
-                currentProgramPrioity);
-        Serial.println(buffer);
+        if(logToSerial == 1){
+            char buffer[255];
+            sprintf(buffer, "%ld %d %d %d: Looking for Received Packets",
+                    millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity);
+            Serial.println(buffer);
+        }
     }
 
     if (rf69.available()){
@@ -1243,10 +1278,13 @@ void loop() {
         if (validPacket && len > 3) {
             lastRssi = rf69.lastRssi();
             
-            sprintf(buffer, "%ld %d %d: Rxd. RSSI: %d len: %d \"%s\" ",
-                    millis(), currentLedProgram, currentProgramPrioity, lastRssi,
-                    len, (char*)packet );
-            Serial.println(buffer);
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Rxd. RSSI: %d len: %d \"%s\" ",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        lastRssi,
+                        len, (char*)packet );
+                Serial.println(buffer);
+            }
 
             char *data = (char*)packet;
               
@@ -1256,31 +1294,54 @@ void loop() {
                 int tempPriority = 0;
                 int numFound = 0;
                 
-                numFound = sscanf(data, "%ld %ld", &tempProgram, &tempPriority);
+                numFound = sscanf(data, "%d %d", &tempProgram, &tempPriority);
                 
                 // if we got two items parsed out of the packet, use them for req
                 if (numFound == 2){
-                    requestedProgramPrioity =  (int32_t) tempPriority;
-                    requestedLedProgram =  (uint8_t) tempProgram;
-
-                    sprintf(buffer, "%ld %d %d: Decoded: %d %d", millis(),
-                            currentLedProgram, currentProgramPrioity,
-                            requestedLedProgram, requestedProgramPrioity);
-                    Serial.println(buffer);
+                    if(logToSerial == 1){
+                        sprintf(buffer, "%ld %d %d %d: Decoded: %d %d",
+                                millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                                tempProgram, tempPriority);
+                        Serial.println(buffer);
+                    }
+                    
+                    // if the new packet has a higher priority than our curren req
+                    // use it.
+                    if(tempPriority > requestedProgramPrioity){
+                        requestedProgramPrioity =  (int32_t) tempPriority;
+                        requestedLedProgram =  (uint8_t) tempProgram;
+                        if(logToSerial == 1){
+                            sprintf(buffer, "%ld %d %d %d: Using rx'd reqPri %d %d",
+                                    millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                                    requestedLedProgram, requestedProgramPrioity);
+                            Serial.println(buffer);
+                        }
+                    }
+                    
+                    // if the recieved packet has the same program, try to sync the priority
+                    if(currentLedProgram == tempProgram){
+                        currentProgramPrioity = tempPriority;
+                    }
 
                 }
                 else {
-                    sprintf(buffer, "%ld %d %d: Bad decode. Found %d items. \"%s\"",
-                            millis(), currentLedProgram, currentProgramPrioity, numFound, data);
-                    Serial.println(buffer);
+                    if(logToSerial == 1){
+                        sprintf(buffer, "%ld %d %d %d: Bad decode. Found %d items. \"%s\"",
+                                millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                                numFound, data);
+                        Serial.println(buffer);
+                    }
                 }
             } // end if rssi threshold
         } // end if recv packet
         else {
-            char buffer[255];
-            sprintf(buffer, "%ld %d %d: Bad rx. len: %d; \"%s\"", millis(),
-                    currentLedProgram, currentProgramPrioity, len, (char*)packet);
-            Serial.println(buffer);
+            if(logToSerial == 1){
+                char buffer[255];
+                sprintf(buffer, "%ld %d %d %d: Bad rx. len: %d; \"%s\"", millis(),
+                        currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        len, (char*)packet);
+                Serial.println(buffer);
+            }
             lastRssi = -100;
         }  // end else recv packet
     } // end rf69 packet available
@@ -1292,7 +1353,7 @@ void loop() {
     // if this new priority is higher than the current priority, switch our
     // current program
     /***********************************************************************/
-    if (millis() - previousTransmitMillis >= transmitPeriodMs ) { // + (random(0, 10))){
+    if (millis() - previousTransmitMillis >= transmitPeriodMs){
         char buffer[255];
         
         if (transmitMode == 1) {
@@ -1300,14 +1361,36 @@ void loop() {
             char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
             
             // generate a random new program with random priority
-            int32_t tempPriority = (int32_t)(random(0, minimumProgramTimeMs));
+            int32_t tempPriority = (int32_t)(random(minimumProgramTimeMs, minimumProgramTimeMs*3/2));
             uint8_t tempProgram = (uint8_t)random(0, numLedPrograms + 1); //min inclusive, max exclusive
             
-            sprintf(buffer, "%ld %d %d: Sending %d %d; last tx: %dms (%d late)",
-                    millis(), currentLedProgram, currentProgramPrioity,
-                    tempProgram, tempPriority, (millis() - previousTransmitMillis),
-                    ((millis() - previousTransmitMillis) - transmitPeriodMs ));
-            Serial.println(buffer);
+            // if the transmitted priority is higher, use it as the new requested
+            if(tempPriority > requestedProgramPrioity){
+                requestedProgramPrioity = tempPriority;
+                requestedLedProgram = tempProgram;
+                if(logToSerial == 1){
+                    sprintf(buffer, "%ld %d %d %d: Using local reqPri %d %d",
+                            millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                            requestedLedProgram, requestedProgramPrioity);
+                    Serial.println(buffer);
+                }
+            }
+            
+            // if the current pri is higher than the temp pri (within some window)
+            // send the current pri to try to get other to sync program _and currPri_ with us
+            if( currentProgramPrioity > tempPriority){
+                tempPriority = currentProgramPrioity;
+                tempProgram = currentLedProgram;
+            }
+            
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Sending %d %d; last tx: %dms (%d late)",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        tempProgram, tempPriority, (int)(millis() - previousTransmitMillis),
+                        (int)((millis() - previousTransmitMillis) - transmitPeriodMs)
+                        );
+                Serial.println(buffer);
+            }
 
             sprintf(radiopacket, "%d %ld", tempProgram, tempPriority);
             // Send a message!
@@ -1319,30 +1402,36 @@ void loop() {
             //rf69.setModeIdle();
             rf69.setModeRx();
             
-            sprintf(buffer, "%ld %d %d: Sent.", millis(), currentLedProgram, currentProgramPrioity);
-            Serial.println(buffer);
-            
-            // if the transmitted priority is higher, use it as the new requested
-            requestedProgramPrioity = requestedProgramPrioity > tempPriority ? requestedProgramPrioity : tempPriority;
-            requestedLedProgram = requestedProgramPrioity > tempPriority ? requestedLedProgram : tempProgram;
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Sent.",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity);
+                Serial.println(buffer);
+            }
             
         } else {
             // Log that we we aren't transmitting. Normally used when testing just one unit.
-            sprintf(buffer, "%ld %d %d: No tx transmitMode != 1, last tx: %dms (%d late)",
-                    millis(), currentLedProgram, currentProgramPrioity,
-                    (millis() - previousTransmitMillis), ((millis() - previousTransmitMillis) - transmitPeriodMs ));
-            Serial.println(buffer);
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: No tx transmitMode != 1, last tx: %dms (%d late)",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        (int)(millis() - previousTransmitMillis),
+                        (int)((millis() - previousTransmitMillis) - transmitPeriodMs )
+                        );
+                Serial.println(buffer);
+            }
         }
         
         if(testMode == 1 ) {
             requestedLedProgram = currentLedProgram+1;
             if (requestedLedProgram >= numLedPrograms) {requestedLedProgram = 0;}
             
-            requestedProgramPrioity =  minimumProgramTimeMs;
-            sprintf(buffer, "%ld %d %d: Test Mode req:%d %d",
-                    millis(), currentLedProgram, currentProgramPrioity,
-                    requestedLedProgram, requestedProgramPrioity);
-            Serial.println(buffer);
+            requestedProgramPrioity = minimumProgramTimeMs;
+            
+            if(logToSerial == 1){
+                sprintf(buffer, "%ld %d %d %d: Test Mode req:%d %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        requestedLedProgram, requestedProgramPrioity);
+                Serial.println(buffer);
+            }
         }
         
         previousTransmitMillis = millis();  // update time since last transmitted to now
