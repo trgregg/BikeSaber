@@ -879,15 +879,21 @@ int ReadAccel() {
 /***********************************************************************/
 // Read the Time of Flight distance to override program
 /***********************************************************************/
-int ReadToF() {
+int ReadToF(int numLedPrograms) {
+    uint8_t maxRange = 300;
+    int ToFPrg = 0;
     uint8_t range = vl.readRange();
     uint8_t status = vl.readRangeStatus();
 
-    if (status != VL6180X_ERROR_NONE) { range = 0;}
-	
-	if (testMode >= 2) {Serial.print("Range: "); Serial.println(range);}
-	
-    return range;
+    // If the ToF sensor status returns an error, such as not ready, or over range, set the ToF program to 0
+    if (status != VL6180X_ERROR_NONE) { ToFPrg = 0;}
+
+    // If the ToF status is not an errot, get the range and divide it by the number of programs. This picks a program to play based on the range.
+    else {  ToFPrg = range / numLedPrograms; }
+	  
+	  if (testMode >= 2) {Serial.print("Range: "); Serial.println(range);}
+    
+    return ToFPrg;
     
 }
 
@@ -911,7 +917,7 @@ void loop() {
     static bool isLEDOn = false;
 
     // Logging control
-    uint8_t logToSerial = 0;
+    uint8_t logToSerial = 1;
     
     // timer statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
@@ -922,8 +928,8 @@ void loop() {
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
     const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
-    const unsigned long AccelCheckPeriodMs = 250; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 480*1000; // how long to wait before giong to still program in ms
+    const unsigned long AccelCheckPeriodMs = 100; // Update time between checking accel to see if we are moving
+    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
     const int StillProgram = 21; // pick a program to run when we are still
 
@@ -939,7 +945,9 @@ void loop() {
     
     const uint8_t numLedPrograms = 20; // max case id, not count
     const uint8_t defaultLedProgram = 5;
-    static uint8_t overrideProgram = 0; // for testing, we want a static program
+    static uint8_t globalOverrideProgram = 0; // If something is overriding the program, like a sensor, this program will also be broadcast so other units sync to it
+    static uint8_t localOverrideProgram = 0; // This local overriding the program, like when we aren't moving, will NOT be broadcast. Other units will not sync to it.
+    static uint8_t ledProgram = defaultLedProgram;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
@@ -963,72 +971,47 @@ void loop() {
     // check Accel to see if we are moving
     /***********************************************************************/
     if (millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) {
+
+    		if (useAccel >= 1){
+            
+            // get the current accel data
+            int accelMagnitude = ReadAccel();
+            
+            // If the accel data is valid and we have significant movement, time how long we haven't been moving
+            if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+                notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
+            } else {
+                notMovingTimer = 0;  // reset the counter since we are moving again
+                localOverrideProgram = 0;
+            }
+            
+            // If we haven't been moving for a long time, override the program
+            if (notMovingTimer > notMovingTimeout) {
+                localOverrideProgram = StillProgram; // go to a low power sparkly program
+                if(logToSerial == 1){
+                    char buffer[255];
+                    sprintf(buffer, "%ld %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d %d",
+                            millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                            notMovingTimer, localOverrideProgram, currentProgramPrioity);
+                    Serial.println((char*)buffer);
+                }
+            }
+    		}
+
         // update accel check timestamp
         previousAccelCheckMillis = millis();
         
-		if (useAccel >= 1){
-        
-        // get the current accel data
-        int accelMagnitude = ReadAccel();
-        
-        // If the accel data is valid and we have significant movement, time how long we haven't been moving
-        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
-            notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
-        } else {
-            notMovingTimer = 0;  // reset the counter since we are moving again
-            overrideProgram = 0;
-        }
-        
-        // If we haven't been moving for a long time, override the program
-        if (notMovingTimer > notMovingTimeout) {
-            overrideProgram = StillProgram; // go to a low power sparkly program
-            if(logToSerial == 1){
-                char buffer[255];
-                sprintf(buffer, "%ld %d %d %d: Motion timeout stillFor %d. overridePrg: %d %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                        notMovingTimer, overrideProgram, currentProgramPrioity);
-                Serial.println((char*)buffer);
-            }
-        }
-		
-		// While we are here... Check the Time of Flight sensor for possible overrides
-		if (useToF >= 1) {
-			int distance = ReadToF();
-			
-			if (distance > 5 && distance < 400) {
-				// looks like we have a valid reading. This means something is infront of the sensor, so let's override the program.
-
-			    if (distance < 20) { overrideProgram = 1;}
-			    else if (distance < 40)  { overrideProgram = 1;}
-				else if (distance < 60)  { overrideProgram = 2;}
-				else if (distance < 80)  { overrideProgram = 3;}
-				else if (distance < 100)  { overrideProgram = 4;}
-				else if (distance < 120)  { overrideProgram = 5;}
-				else if (distance < 140)  { overrideProgram = 6;}
-				else if (distance < 160)  { overrideProgram = 7;}
-				else if (distance < 180)  { overrideProgram = 8;}
-				else if (distance < 200)  { overrideProgram = 9;}
-				else if (distance < 220)  { overrideProgram = 10;}
-				else if (distance < 240)  { overrideProgram = 11;}
-				else if (distance < 260)  { overrideProgram = 12;}
-				else if (distance < 280)  { overrideProgram = 13;}
-				else if (distance < 300)  { overrideProgram = 14;}
-				else if (distance < 320)  { overrideProgram = 15;}
-				else if (distance < 340)  { overrideProgram = 16;}
-				else if (distance < 360)  { overrideProgram = 17;}
-				else if (distance < 380)  { overrideProgram = 18;}
-				else if (distance < 400)  { overrideProgram = 19;}
-		        char buffer[255];
-		        sprintf(buffer, "%ld %d %d: TimeOfFlight Override %d. overridePrg: %d %d",
-			        millis(), currentLedProgram, currentProgramPrioity,
-			        distance, overrideProgram, currentProgramPrioity);
-      
-			} else { overrideProgram = 0;}
-     	
-		}
-	
-    }
-    
+    		// While we are here... Check the Time of Flight sensor for possible overrides
+    		if (useToF >= 1) {
+        			int ToFPrg = ReadToF(numLedPrograms);
+              if(logToSerial == 1){
+        		        char buffer[255];
+        		        sprintf(buffer, "%ld %d %d: TimeOfFlight Override Prg: %d %d",
+                            millis(), currentLedProgram, currentProgramPrioity,
+                            ToFPrg, currentProgramPrioity);
+                    Serial.println((char*)buffer);
+              }
+    		}  
     }
     
     /***********************************************************************/
@@ -1110,21 +1093,21 @@ void loop() {
         
     }
     
-    // if there is an override program number use that program.
-    if (overrideProgram != 0) {
-        // if this is the first time here, save the program history so we can switch back
-        if(currentLedProgram != overrideProgram) {
+    // if there is an global override program number use that program. This will also be broadcaste out
+    if (globalOverrideProgram != 0) {
+        // if this is the first time here, log the override program
+        if(currentLedProgram != globalOverrideProgram) {
             if(logToSerial == 1){
                 char buffer[255];
                 sprintf(buffer,"%ld %d %d %d: Overiding to %d",
                         millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                        overrideProgram);
+                        globalOverrideProgram);
                 Serial.println((char*)buffer);
             }
         }
         
         // override the current program
-        currentLedProgram = overrideProgram;
+        currentLedProgram = globalOverrideProgram;
     }
     else {
         // if we're not overriding the program anymore, restore the previous program
@@ -1132,6 +1115,28 @@ void loop() {
         // the new program might be different than it was when we went to override
         currentLedProgram = previousLedProgram;
     }
+
+    // If there is a local overrides that won't be broadcast, set that to be played. 
+    if (localOverrideProgram != 0) {
+        // if this is the first time here, log the local override program 
+        if(ledProgram != localOverrideProgram) {
+            if(logToSerial == 1){
+                char buffer[255];
+                sprintf(buffer,"%ld %d %d %d: Locally Overiding to %d",
+                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        localOverrideProgram);
+                Serial.println((char*)buffer);
+            }
+        }
+             
+        // override the current program, but only locally
+        ledProgram = localOverrideProgram;
+
+    } else {
+        // If there is no local override, play the currentLedProgram
+        ledProgram = currentLedProgram;
+    }
+
     
     /***********************************************************************/
     // Led update
@@ -1142,7 +1147,7 @@ void loop() {
         previousLedUpdateMillis = millis();
         
         // play the current LED program
-        switch(currentLedProgram){
+        switch(ledProgram){
             default:
                 if(logToSerial == 1){
                     Serial.println("unknown LED program");
@@ -1233,14 +1238,16 @@ void loop() {
                 ledUpdatePeriodMs = 20;
                 Sutro();
                 break;
+            
+            // These programs are left out of the numLedPrograms so they are only used for overrides
             // Sparkle slow is used for when there is no motion
             case 21: // Sparkle slow
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = Sparkle(150, 150, 150, 2, 10, 200);
+                ledUpdatePeriodMs = Sparkle(100, 150, 150, 1, 10, 250);
                 break;
             case 22: // SparkleDecay
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleDecay((int)(random(0,200)),(int)(random(0,100)),(int)(random(0,200)), 5, 0);
+                ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 5, 0);
                 break;
         }
     }
