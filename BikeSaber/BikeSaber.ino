@@ -136,6 +136,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 #define NUMPIXELS 130  // For Bike Whips
 //#define NUMPIXELS 50 // For Bike Wheels
+//#define NUMPIXELS 900  // For Frence
 #define PIXEL_PIN 6
 //Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
@@ -169,7 +170,6 @@ void setup()
     digitalWrite(RFM69_RST, LOW);
     
     Serial.println("Feather RFM69 TX Test!");
-    Serial.println();
     
     // manual reset
     digitalWrite(RFM69_RST, HIGH);
@@ -323,7 +323,7 @@ void colorWipe(uint32_t c) {
     }
     
     // move to the next pixel
-	if ( lessLight > 1 ) { g_LedProgramCurrentPixel= g_LedProgramCurrentPixel + lessLight;} // Skip pixels if we want less light
+	if ( lessLight > 0 ) { g_LedProgramCurrentPixel= g_LedProgramCurrentPixel + lessLight;} // Skip pixels if we want less light
     g_LedProgramCurrentPixel++;
     
     // if we've filled the strip, flip on/off and refill
@@ -413,6 +413,14 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
                 // for full string, just fill the full string with the current color
                 strip.fill(g_LedProgramColor,0, NUMPIXELS);
             }
+
+            if ( lessLight > 0 ) {  //turn off every other pixel
+                for(int i=0; i < (strip.numPixels()); i++){
+                    i=i+lessLight;   //turn off every other pixel
+                    strip.setPixelColor(i, strip.Color(0, 0, 0));
+                }
+            }   
+            
             strip.show();
             
             // setup for strobe delay before turning off
@@ -608,7 +616,9 @@ uint32_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay
             g_LedProgramState++;
             // fall through
         case 1: // turn all on
-            strip.fill(strobeColor, 0, strip.numPixels());
+            // strip.fill(strobeColor, 0, strip.numPixels());
+			for(int i=0; i < (strip.numPixels()); i++) {strip.setPixelColor(i, strobeColor); i=i+lessLight;} 
+			
             strip.show();
             delayForNextUpdateMs = flashDelay;
             g_LedProgramState++;
@@ -666,9 +676,9 @@ void Sutro(){
                int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel); // top 1/2-3/4 is red
     strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
     if( lessLight > 0) {
-        for(int i=0; i< strip.numPixels(); i+lessLight) {
-          i++;
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
+        for(int i=0; i< strip.numPixels(); i++) {
+            i=i+lessLight;   //turn off every other pixel
+            strip.setPixelColor(i, strip.Color(0, 0, 0));
         }
     }
     strip.show();
@@ -816,6 +826,7 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
     
     // use g_LedProgramState for on/off state tracking
     uint32_t delayForNextUpdateMs = sparkleDelay;
+    const uint32_t sparkleColor = strip.Color(red, green, blue);
     
     switch(g_LedProgramState){
         default:
@@ -824,11 +835,11 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
             // fall through
         case 0: // on
             // turn on several groups of pixels
-            for (int i = 0; i < sparksPerFlash; i++) {
-                int Pixel = (int)random(strip.numPixels());
-                setPixel(Pixel-1,red,green,blue);
-                setPixel(Pixel,red,green,blue);
-                setPixel(Pixel+1,red,green,blue);
+            for (int i = 0; i < sparksPerFlash; i++) {  // Draw the number of sparkles we want
+                int Pixel = (int)random(strip.numPixels());   // Pick a random place on the string to start the sparkle
+                for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string for each sparkle
+                    setPixel(Pixel-j,red,green,blue);
+                }
             }
             strip.show();
             delayForNextUpdateMs = sparkleDelay;
@@ -929,7 +940,7 @@ void loop() {
     static unsigned long previousAccelCheckMillis = millis();
     const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
     const unsigned long AccelCheckPeriodMs = 100; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 10*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
     const int StillProgram = 21; // pick a program to run when we are still
 
@@ -944,16 +955,23 @@ void loop() {
     const unsigned long minimumProgramTimeMs = 5000;  // How long to run a program after switching programs
     
     const uint8_t numLedPrograms = 20; // max case id, not count
-    const uint8_t defaultLedProgram = 5;
+
     static uint8_t globalOverrideProgram = 0; // If something is overriding the program, like a sensor, this program will also be broadcast so other units sync to it
+    static int8_t requestedRemoteGlobalOverride = 0; // If we recieve an override from a different unit
     static uint8_t localOverrideProgram = 0; // This local overriding the program, like when we aren't moving, will NOT be broadcast. Other units will not sync to it.
+    
+    const uint8_t defaultLedProgram = 5;
+    static uint8_t overrideProgram = 0; // For testing specific paterns.
+    
     static uint8_t ledProgram = defaultLedProgram;
+    static uint8_t previuosLedProgram = defaultLedProgram;
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
-    
+	    
     static int32_t currentProgramPrioity = minimumProgramTimeMs; // need to be allowed to go negative
     static int32_t requestedProgramPrioity = 0;
+
     
     static uint32_t ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
     
@@ -987,14 +1005,16 @@ void loop() {
             
             // If we haven't been moving for a long time, override the program
             if (notMovingTimer > notMovingTimeout) {
-                localOverrideProgram = StillProgram; // go to a low power sparkly program
-                if(logToSerial == 1){
-                    char buffer[255];
-                    sprintf(buffer, "%ld %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d %d",
-                            millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                            notMovingTimer, localOverrideProgram, currentProgramPrioity);
-                    Serial.println((char*)buffer);
+                if (ledProgram != localOverrideProgram) {  // log that we are not moving if this is the first time here
+                    if(logToSerial == 1){
+                        char buffer[255];
+                        sprintf(buffer, "%ld %d %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d",
+                                millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                                notMovingTimer, localOverrideProgram);
+                        Serial.println((char*)buffer);
+                    }
                 }
+                localOverrideProgram = StillProgram; // go to a low power sparkly program
             }
     		}
 
@@ -1003,14 +1023,19 @@ void loop() {
         
     		// While we are here... Check the Time of Flight sensor for possible overrides
     		if (useToF >= 1) {
-        			int ToFPrg = ReadToF(numLedPrograms);
-              if(logToSerial == 1){
-        		        char buffer[255];
-        		        sprintf(buffer, "%ld %d %d: TimeOfFlight Override Prg: %d %d",
-                            millis(), currentLedProgram, currentProgramPrioity,
-                            ToFPrg, currentProgramPrioity);
-                    Serial.println((char*)buffer);
-              }
+      			int ToFPrg = ReadToF(numLedPrograms);
+            
+            if (ToFPrg > 0) {
+
+                globalOverrideProgram = ToFPrg;
+                if(logToSerial == 1){
+          		        char buffer[255];
+          		        sprintf(buffer, "%ld %d %d %d %d: Time Of Flight Override Prg: %d",
+                              millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                              ToFPrg);
+                      Serial.println((char*)buffer);
+                }
+            } else { globalOverrideProgram = 0 ;}
     		}  
     }
     
@@ -1056,8 +1081,8 @@ void loop() {
         // if the program is actually changing, reset the state trackers
         if (currentLedProgram != requestedLedProgram){
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Changing program %d > %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: Changing program %d > %d",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         requestedProgramPrioity, currentProgramPrioity
                         );
                 Serial.println((char*)buffer);
@@ -1076,8 +1101,8 @@ void loop() {
         }
         else {
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Syncing priority to %d from %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: Syncing priority to %d from %d",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         requestedProgramPrioity, currentProgramPrioity
                         );
                 Serial.println((char*)buffer);
@@ -1092,51 +1117,41 @@ void loop() {
         requestedLedProgram = 0;
         
     }
-    
-    // if there is an global override program number use that program. This will also be broadcaste out
-    if (globalOverrideProgram != 0) {
-        // if this is the first time here, log the override program
-        if(currentLedProgram != globalOverrideProgram) {
-            if(logToSerial == 1){
-                char buffer[255];
-                sprintf(buffer,"%ld %d %d %d: Overiding to %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                        globalOverrideProgram);
-                Serial.println((char*)buffer);
-            }
-        }
+
+
+    /***********************************************************************/
+    // Led overrides
+    // We can have a global override that we want to broadcast, or local override that only affects this unit, or a received global override
+    // Order or priorty: 
+    //    - globalOverrideProgram created on this unit
+    //    - requestedRemoteGlobalOverride received from radio
+    //    - localOverrideProgram (ie not-moving sparkle)
+    //    - then lastly the random patterns synced between units
+	  // We don't change the "currentLedProgram" nor "currentProgramPrioity" as we want to stay synced with other units. 
+	  // We only chnage what we are displaying by changing "ledProgram".
+    /***********************************************************************/
+
+    previuosLedProgram = ledProgram;
+  	ledProgram = currentLedProgram; // Set the program to play to the sync'ed current program
+  	if ( localOverrideProgram !=0 ) { ledProgram = localOverrideProgram; }  // This override is generated locally, and only affects locally. Used for sleeping.
+  	if ( requestedRemoteGlobalOverride !=0 ) {ledProgram = requestedRemoteGlobalOverride; }  // This override is received from other units. Used for other units with sensors that want to override everyone.
+  	if ( globalOverrideProgram !=0 ) { ledProgram = globalOverrideProgram; }  // This override is generated locally, but we want to transmit to all other units.
+    if ( overrideProgram != 0 ) { ledProgram = overrideProgram;}  // use the manual override if it exists for testing patterns
+  		
+    // Log if we have any newly added overrides 
+    if ( ledProgram != previuosLedProgram ) { 
+        // Looks like we are adding an override, or changing overrides. Clear previous program states.
+        resetAllLedProgramStates();  
         
-        // override the current program
-        currentLedProgram = globalOverrideProgram;
-    }
-    else {
-        // if we're not overriding the program anymore, restore the previous program
-        // since we might have recieved a new program request since we were last moving
-        // the new program might be different than it was when we went to override
-        currentLedProgram = previousLedProgram;
-    }
-
-    // If there is a local overrides that won't be broadcast, set that to be played. 
-    if (localOverrideProgram != 0) {
-        // if this is the first time here, log the local override program 
-        if(ledProgram != localOverrideProgram) {
-            if(logToSerial == 1){
-                char buffer[255];
-                sprintf(buffer,"%ld %d %d %d: Locally Overiding to %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                        localOverrideProgram);
-                Serial.println((char*)buffer);
-            }
+        // if this is the first time here, log the override program  
+        if(logToSerial == 1){
+            char buffer[255];
+            sprintf(buffer,"%ld %d %d %d %d: Overiding to %d",
+                    millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                    ledProgram);
+            Serial.println((char*)buffer);
         }
-             
-        // override the current program, but only locally
-        ledProgram = localOverrideProgram;
-
-    } else {
-        // If there is no local override, play the currentLedProgram
-        ledProgram = currentLedProgram;
     }
-
     
     /***********************************************************************/
     // Led update
@@ -1211,7 +1226,7 @@ void loop() {
                 break;
             case 14: // color wipe random color and back to black
                 ledUpdatePeriodMs = 3;
-                colorWipe ((random(0,200)),(random(0,100)),(random(0,200)));
+                colorWipe ((random(100,200)),100,(random(100,200)));
                 break;
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
                 ledUpdatePeriodMs = 10;
@@ -1224,7 +1239,7 @@ void loop() {
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
                 ledUpdatePeriodMs = 15;
-                Fire(55,120);
+                Fire(30,200);
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
@@ -1262,7 +1277,7 @@ void loop() {
         if(logToSerial == 1){
             char buffer[255];
             sprintf(buffer, "%ld %d %d %d: Looking for Received Packets",
-                    millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity);
+                    millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity);
             Serial.println(buffer);
         }
     }
@@ -1286,8 +1301,8 @@ void loop() {
             lastRssi = rf69.lastRssi();
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Rxd. RSSI: %d len: %d \"%s\" ",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: Rxd. RSSI: %d len: %d \"%s\" ",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         lastRssi,
                         len, (char*)packet );
                 Serial.println(buffer);
@@ -1299,16 +1314,17 @@ void loop() {
             if(lastRssi > minRssiThreshold){
                 int tempProgram = 0;
                 int tempPriority = 0;
+                int tempGlobalOverrideProgram = 0;
                 int numFound = 0;
                 
-                numFound = sscanf(data, "%d %d", &tempProgram, &tempPriority);
+                numFound = sscanf(data, "%d %d %d", &tempProgram, &tempPriority, &tempGlobalOverrideProgram);
                 
                 // if we got two items parsed out of the packet, use them for req
-                if (numFound == 2){
+                if (numFound == 3){
                     if(logToSerial == 1){
-                        sprintf(buffer, "%ld %d %d %d: Decoded: %d %d",
-                                millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                                tempProgram, tempPriority);
+                        sprintf(buffer, "%ld %d %d %d %d: Decoded: %d %d %d",
+                                millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                                tempProgram, tempPriority, tempGlobalOverrideProgram);
                         Serial.println(buffer);
                     }
                     
@@ -1318,13 +1334,16 @@ void loop() {
                         requestedProgramPrioity =  (int32_t) tempPriority;
                         requestedLedProgram =  (uint8_t) tempProgram;
                         if(logToSerial == 1){
-                            sprintf(buffer, "%ld %d %d %d: Using rx'd reqPri %d %d",
-                                    millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                                    requestedLedProgram, requestedProgramPrioity);
+                            sprintf(buffer, "%ld %d %d %d %d: Using rx'd reqPri %d %d %d",
+                                    millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                                    requestedLedProgram, requestedProgramPrioity, requestedRemoteGlobalOverride);
                             Serial.println(buffer);
                         }
                     }
                     
+					// Populate the requestedRemoteGlobalOverride, which will also set it to 0 if the remote override has gone away.
+					requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
+					
                     // if the recieved packet has the same program, try to sync the priority
                     if(currentLedProgram == tempProgram){
                         currentProgramPrioity = tempPriority;
@@ -1333,8 +1352,8 @@ void loop() {
                 }
                 else {
                     if(logToSerial == 1){
-                        sprintf(buffer, "%ld %d %d %d: Bad decode. Found %d items. \"%s\"",
-                                millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                        sprintf(buffer, "%ld %d %d %d %d: Bad decode. Found %d items. \"%s\"",
+                                millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                                 numFound, data);
                         Serial.println(buffer);
                     }
@@ -1344,8 +1363,8 @@ void loop() {
         else {
             if(logToSerial == 1){
                 char buffer[255];
-                sprintf(buffer, "%ld %d %d %d: Bad rx. len: %d; \"%s\"", millis(),
-                        currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: Bad rx. len: %d; \"%s\"", 
+                millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         len, (char*)packet);
                 Serial.println(buffer);
             }
@@ -1376,8 +1395,8 @@ void loop() {
                 requestedProgramPrioity = tempPriority;
                 requestedLedProgram = tempProgram;
                 if(logToSerial == 1){
-                    sprintf(buffer, "%ld %d %d %d: Using local reqPri %d %d",
-                            millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                    sprintf(buffer, "%ld %d %d %d %d: Using local reqPri %d %d",
+                            millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                             requestedLedProgram, requestedProgramPrioity);
                     Serial.println(buffer);
                 }
@@ -1391,15 +1410,15 @@ void loop() {
             }
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Sending %d %d; last tx: %dms (%d late)",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
-                        tempProgram, tempPriority, (int)(millis() - previousTransmitMillis),
+                sprintf(buffer, "%ld %d %d %d %d: Sending %d %d %d; last tx: %dms (%d late)",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                        tempProgram, tempPriority, globalOverrideProgram, (int)(millis() - previousTransmitMillis),
                         (int)((millis() - previousTransmitMillis) - transmitPeriodMs)
                         );
                 Serial.println(buffer);
             }
 
-            sprintf(radiopacket, "%d %ld", tempProgram, tempPriority);
+            sprintf(radiopacket, "%d %ld %d", tempProgram, tempPriority, globalOverrideProgram);
             // Send a message!
             rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
             rf69.waitPacketSent();
@@ -1410,16 +1429,16 @@ void loop() {
             rf69.setModeRx();
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Sent.",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity);
+                sprintf(buffer, "%ld %d %d %d %d: Sent.",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity);
                 Serial.println(buffer);
             }
             
         } else {
             // Log that we we aren't transmitting. Normally used when testing just one unit.
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: No tx transmitMode != 1, last tx: %dms (%d late)",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: No tx transmitMode != 1, last tx: %dms (%d late)",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         (int)(millis() - previousTransmitMillis),
                         (int)((millis() - previousTransmitMillis) - transmitPeriodMs )
                         );
@@ -1434,8 +1453,8 @@ void loop() {
             requestedProgramPrioity = minimumProgramTimeMs;
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d: Test Mode req:%d %d",
-                        millis(), currentLedProgram, currentProgramPrioity, requestedProgramPrioity,
+                sprintf(buffer, "%ld %d %d %d %d: Test Mode req:%d %d",
+                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         requestedLedProgram, requestedProgramPrioity);
                 Serial.println(buffer);
             }
