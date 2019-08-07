@@ -80,7 +80,44 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3511146D22FB356900127B4E /* Arduino */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Arduino; path = /Users/jlgregg/Documents/Code/BikeSaber/../../Arduino; sourceTree = "<absolute>"; };
+		356F9AC522FB39E700B9673B /* Adafruit_LIS3DH.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Adafruit_LIS3DH.cpp; sourceTree = "<group>"; };
+		356F9AC622FB39E700B9673B /* code-of-conduct.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "code-of-conduct.md"; sourceTree = "<group>"; };
+		356F9AC722FB39E700B9673B /* Adafruit_LIS3DH.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Adafruit_LIS3DH.h; sourceTree = "<group>"; };
+		356F9AC822FB39E700B9673B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		356F9ACB22FB39E700B9673B /* tapdemo.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tapdemo.ino; sourceTree = "<group>"; };
+		356F9ACD22FB39E700B9673B /* adcdemo.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = adcdemo.ino; sourceTree = "<group>"; };
+		356F9ACF22FB39E700B9673B /* acceldemo.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = acceldemo.ino; sourceTree = "<group>"; };
+		356F9AD022FB39E700B9673B /* license.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = license.txt; sourceTree = "<group>"; };
+		356F9AD122FB39E700B9673B /* library.properties */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = library.properties; sourceTree = "<group>"; };
+		356F9AD322FB39E700B9673B /* image.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = image.jpg; sourceTree = "<group>"; };
+		356F9B5722FB49D600B9673B /* vl53l0x_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_platform.h; sourceTree = "<group>"; };
+		356F9B5A22FB49D600B9673B /* vl53l0x_api_ranging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_api_ranging.cpp; sourceTree = "<group>"; };
+		356F9B5B22FB49D600B9673B /* vl53l0x_api_calibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_api_calibration.cpp; sourceTree = "<group>"; };
+		356F9B5C22FB49D600B9673B /* vl53l0x_api_core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_api_core.cpp; sourceTree = "<group>"; };
+		356F9B5D22FB49D600B9673B /* vl53l0x_api_strings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_api_strings.cpp; sourceTree = "<group>"; };
+		356F9B5E22FB49D600B9673B /* vl53l0x_api.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_api.cpp; sourceTree = "<group>"; };
+		356F9B5F22FB49D600B9673B /* vl53l0x_def.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_def.h; sourceTree = "<group>"; };
+		356F9B6022FB49D600B9673B /* vl53l0x_platform_log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_platform_log.h; sourceTree = "<group>"; };
+		356F9B6122FB49D600B9673B /* vl53l0x_api_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_api_core.h; sourceTree = "<group>"; };
+		356F9B6222FB49D600B9673B /* vl53l0x_i2c_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_i2c_platform.h; sourceTree = "<group>"; };
+		356F9B6522FB49D600B9673B /* vl53l0x_i2c_comms.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_i2c_comms.cpp; sourceTree = "<group>"; };
+		356F9B6622FB49D600B9673B /* vl53l0x_platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vl53l0x_platform.cpp; sourceTree = "<group>"; };
+		356F9B6722FB49D600B9673B /* Adafruit_VL53L0X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Adafruit_VL53L0X.cpp; sourceTree = "<group>"; };
+		356F9B6822FB49D600B9673B /* vl53l0x_tuning.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_tuning.h; sourceTree = "<group>"; };
+		356F9B6922FB49D600B9673B /* vl53l0x_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_api.h; sourceTree = "<group>"; };
+		356F9B6A22FB49D600B9673B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		356F9B6B22FB49D600B9673B /* vl53l0x_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_device.h; sourceTree = "<group>"; };
+		356F9B6C22FB49D600B9673B /* vl53l0x_api_ranging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_api_ranging.h; sourceTree = "<group>"; };
+		356F9B6F22FB49D600B9673B /* vl53l0x_dual.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vl53l0x_dual.ino; sourceTree = "<group>"; };
+		356F9B7122FB49D600B9673B /* vl53l0x.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vl53l0x.ino; sourceTree = "<group>"; };
+		356F9B7322FB49D600B9673B /* vl53l0x_oled.ino */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vl53l0x_oled.ino; sourceTree = "<group>"; };
+		356F9B7422FB49D600B9673B /* vl53l0x_api_strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_api_strings.h; sourceTree = "<group>"; };
+		356F9B7522FB49D600B9673B /* vl53l0x_interrupt_threshold_settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_interrupt_threshold_settings.h; sourceTree = "<group>"; };
+		356F9B7622FB49D600B9673B /* doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = doxyfile; sourceTree = "<group>"; };
+		356F9B7722FB49D600B9673B /* library.properties */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = library.properties; sourceTree = "<group>"; };
+		356F9B7822FB49D600B9673B /* Adafruit_VL53L0X.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Adafruit_VL53L0X.h; sourceTree = "<group>"; };
+		356F9B7922FB49D600B9673B /* vl53l0x_api_calibration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_api_calibration.h; sourceTree = "<group>"; };
+		356F9B7A22FB49D600B9673B /* vl53l0x_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vl53l0x_types.h; sourceTree = "<group>"; };
 		35C74AA92100169C007E4210 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		35C74AAC2100169C007E4210 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		35C74AAE2100169C007E4210 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -355,6 +392,170 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		356F9AC422FB39E700B9673B /* Adafruit_LIS3DH */ = {
+			isa = PBXGroup;
+			children = (
+				356F9AC522FB39E700B9673B /* Adafruit_LIS3DH.cpp */,
+				356F9AC622FB39E700B9673B /* code-of-conduct.md */,
+				356F9AC722FB39E700B9673B /* Adafruit_LIS3DH.h */,
+				356F9AC822FB39E700B9673B /* README.md */,
+				356F9AC922FB39E700B9673B /* examples */,
+				356F9AD022FB39E700B9673B /* license.txt */,
+				356F9AD122FB39E700B9673B /* library.properties */,
+				356F9AD222FB39E700B9673B /* assets */,
+			);
+			path = Adafruit_LIS3DH;
+			sourceTree = "<group>";
+		};
+		356F9AC922FB39E700B9673B /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				356F9ACA22FB39E700B9673B /* tapdemo */,
+				356F9ACC22FB39E700B9673B /* adcdemo */,
+				356F9ACE22FB39E700B9673B /* acceldemo */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		356F9ACA22FB39E700B9673B /* tapdemo */ = {
+			isa = PBXGroup;
+			children = (
+				356F9ACB22FB39E700B9673B /* tapdemo.ino */,
+			);
+			path = tapdemo;
+			sourceTree = "<group>";
+		};
+		356F9ACC22FB39E700B9673B /* adcdemo */ = {
+			isa = PBXGroup;
+			children = (
+				356F9ACD22FB39E700B9673B /* adcdemo.ino */,
+			);
+			path = adcdemo;
+			sourceTree = "<group>";
+		};
+		356F9ACE22FB39E700B9673B /* acceldemo */ = {
+			isa = PBXGroup;
+			children = (
+				356F9ACF22FB39E700B9673B /* acceldemo.ino */,
+			);
+			path = acceldemo;
+			sourceTree = "<group>";
+		};
+		356F9AD222FB39E700B9673B /* assets */ = {
+			isa = PBXGroup;
+			children = (
+				356F9AD322FB39E700B9673B /* image.jpg */,
+			);
+			path = assets;
+			sourceTree = "<group>";
+		};
+		356F9B5622FB49D600B9673B /* Adafruit_VL53L0X */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B5722FB49D600B9673B /* vl53l0x_platform.h */,
+				356F9B5822FB49D600B9673B /* core */,
+				356F9B5F22FB49D600B9673B /* vl53l0x_def.h */,
+				356F9B6022FB49D600B9673B /* vl53l0x_platform_log.h */,
+				356F9B6122FB49D600B9673B /* vl53l0x_api_core.h */,
+				356F9B6222FB49D600B9673B /* vl53l0x_i2c_platform.h */,
+				356F9B6322FB49D600B9673B /* platform */,
+				356F9B6722FB49D600B9673B /* Adafruit_VL53L0X.cpp */,
+				356F9B6822FB49D600B9673B /* vl53l0x_tuning.h */,
+				356F9B6922FB49D600B9673B /* vl53l0x_api.h */,
+				356F9B6A22FB49D600B9673B /* README.md */,
+				356F9B6B22FB49D600B9673B /* vl53l0x_device.h */,
+				356F9B6C22FB49D600B9673B /* vl53l0x_api_ranging.h */,
+				356F9B6D22FB49D600B9673B /* examples */,
+				356F9B7422FB49D600B9673B /* vl53l0x_api_strings.h */,
+				356F9B7522FB49D600B9673B /* vl53l0x_interrupt_threshold_settings.h */,
+				356F9B7622FB49D600B9673B /* doxyfile */,
+				356F9B7722FB49D600B9673B /* library.properties */,
+				356F9B7822FB49D600B9673B /* Adafruit_VL53L0X.h */,
+				356F9B7922FB49D600B9673B /* vl53l0x_api_calibration.h */,
+				356F9B7A22FB49D600B9673B /* vl53l0x_types.h */,
+				356F9B7B22FB49D600B9673B /* src */,
+			);
+			path = Adafruit_VL53L0X;
+			sourceTree = "<group>";
+		};
+		356F9B5822FB49D600B9673B /* core */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B5922FB49D600B9673B /* src */,
+			);
+			path = core;
+			sourceTree = "<group>";
+		};
+		356F9B5922FB49D600B9673B /* src */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B5A22FB49D600B9673B /* vl53l0x_api_ranging.cpp */,
+				356F9B5B22FB49D600B9673B /* vl53l0x_api_calibration.cpp */,
+				356F9B5C22FB49D600B9673B /* vl53l0x_api_core.cpp */,
+				356F9B5D22FB49D600B9673B /* vl53l0x_api_strings.cpp */,
+				356F9B5E22FB49D600B9673B /* vl53l0x_api.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		356F9B6322FB49D600B9673B /* platform */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B6422FB49D600B9673B /* src */,
+			);
+			path = platform;
+			sourceTree = "<group>";
+		};
+		356F9B6422FB49D600B9673B /* src */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B6522FB49D600B9673B /* vl53l0x_i2c_comms.cpp */,
+				356F9B6622FB49D600B9673B /* vl53l0x_platform.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		356F9B6D22FB49D600B9673B /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B6E22FB49D600B9673B /* vl53l0x_dual */,
+				356F9B7022FB49D600B9673B /* vl53l0x */,
+				356F9B7222FB49D600B9673B /* vl53l0x_oled */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		356F9B6E22FB49D600B9673B /* vl53l0x_dual */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B6F22FB49D600B9673B /* vl53l0x_dual.ino */,
+			);
+			path = vl53l0x_dual;
+			sourceTree = "<group>";
+		};
+		356F9B7022FB49D600B9673B /* vl53l0x */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B7122FB49D600B9673B /* vl53l0x.ino */,
+			);
+			path = vl53l0x;
+			sourceTree = "<group>";
+		};
+		356F9B7222FB49D600B9673B /* vl53l0x_oled */ = {
+			isa = PBXGroup;
+			children = (
+				356F9B7322FB49D600B9673B /* vl53l0x_oled.ino */,
+			);
+			path = vl53l0x_oled;
+			sourceTree = "<group>";
+		};
+		356F9B7B22FB49D600B9673B /* src */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
 		35C74A932100169C007E4210 = {
 			isa = PBXGroup;
 			children = (
@@ -580,8 +781,7 @@
 				35C74BD0210806A1007E4210 /* library.properties */,
 				35C74BD1210806A1007E4210 /* .travis.yml */,
 			);
-			name = Adafruit_NeoPixel;
-			path = ../Adafruit_NeoPixel;
+			path = Adafruit_NeoPixel;
 			sourceTree = "<group>";
 		};
 		35C74BBA210806A1007E4210 /* examples */ = {
@@ -656,7 +856,6 @@
 		AAAA180718174602AA000000 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				3511146D22FB356900127B4E /* Arduino */,
 				AAAA180718174602AA00032D /* Sketchbook */,
 			);
 			path = Resources;
@@ -673,11 +872,13 @@
 		AAAA180718174602AA00032E /* libraries */ = {
 			isa = PBXGroup;
 			children = (
+				356F9B5622FB49D600B9673B /* Adafruit_VL53L0X */,
+				356F9AC422FB39E700B9673B /* Adafruit_LIS3DH */,
 				35C74BB3210806A1007E4210 /* Adafruit_NeoPixel */,
 				AAAA180718174602AA00032F /* RadioHead */,
 			);
 			name = libraries;
-			path = ../../../../../../../../../Users/jlgregg/Documents/Arduino/libraries/RadioHead;
+			path = ../../../../../../../../../Users/jlgregg/Documents/Arduino/libraries;
 			sourceTree = SDKROOT;
 		};
 		AAAA180718174602AA00032F /* RadioHead */ = {
@@ -738,7 +939,7 @@
 				AAAA180718174602AA000376 /* radio_config_Si4460.h */,
 				AAAA180718174602AA000377 /* tools */,
 			);
-			name = RadioHead;
+			path = RadioHead;
 			sourceTree = "<group>";
 		};
 		AAAA180718174602AA000330 /* RF24configs */ = {

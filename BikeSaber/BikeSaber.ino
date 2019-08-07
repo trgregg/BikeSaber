@@ -82,9 +82,7 @@
 #include "Adafruit_NeoPixel.h"
 
 // Accelerometer 
-#include <Wire.h>
-#include <Adafruit_LIS3DH.h>
-#include <Adafruit_Sensor.h>
+#include "Adafruit_LIS3DH.h"
 // Accelerometer Hardware SPI Comms
 //#define LIS3DH_CS 10
 //Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
@@ -95,7 +93,7 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 // Time of Flight Sensor
 //#include "Adafruit_VL6180X.h"
 //Adafruit_VL6180X vl = Adafruit_VL6180X();
-#include "Adafruit_VL53L0X.h"
+#include <Adafruit_VL53L0X.h>
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // Define structures and classes
