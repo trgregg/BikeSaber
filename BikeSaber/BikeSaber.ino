@@ -102,7 +102,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 
 // Define variables and constants
-const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+const int lessLight = 2;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
@@ -654,7 +654,7 @@ uint32_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay
 }
 
 /***********************************************************************/
-// Sutro emulator?
+// Sutro emulator
 /***********************************************************************/
 void Sutro(){
     // use g_LedProgramCurrentPixel for current position tracking
@@ -680,8 +680,9 @@ void Sutro(){
     strip.fill(WhiteColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
     if( lessLight > 0) {
         for(int i=0; i< strip.numPixels(); i++) {
-            i=i+lessLight;   //turn off every other pixel
-            strip.setPixelColor(i, strip.Color(0, 0, 0));
+            if ( i % (lessLight+1) != 0) {  
+                strip.setPixelColor(i, strip.Color(0, 0, 0));
+            }
         }
     }
     strip.show();
@@ -874,7 +875,7 @@ void ToFWipe(byte red, byte green, byte blue, int ballPosition) {
 
     // Draw the moving ball
 //    strip.fill( color, ballPosition, ballPosition + 2 ); 
-      for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string for each sparkle
+      for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string 
           setPixel(ballPosition+j,red,green,blue);
       }
 
@@ -1284,7 +1285,7 @@ void loop() {
                 break;
             case 14: // color wipe random color and back to black
                 ledUpdatePeriodMs = 3;
-                colorWipe ((random(100,200)),100,(random(100,200)));
+                colorWipe (Wheel(random(0,255)));
                 break;
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
                 ledUpdatePeriodMs = 10;
@@ -1297,15 +1298,15 @@ void loop() {
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
                 ledUpdatePeriodMs = 15;
-                Fire(30,200);
+                Fire(60,200);
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
                 RunningLights(0,150,150);
                 break;
-            case 19: // Sparkle
+            case 19: // Sparkle (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = Sparkle(255, 255, 255, 3, 5, 5);
+                ledUpdatePeriodMs = Sparkle(255, 255, 255, 2, 10, 5);
                 break;
             case 20: // Sutro
                 ledUpdatePeriodMs = 20;
@@ -1319,8 +1320,8 @@ void loop() {
                 ledUpdatePeriodMs = Sparkle(100, 150, 150, 1, 10, 250);
                 break;
             case 22: // SparkleDecay
-                // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 5, 0);
+                // variable update rate based on state of the program (int red, int green, int blue, int fadeDelay, int endPause) {
+                ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 2, 0);
                 break;
             case 23: // ToFWipe
                 // variable update rate based on state of the program
