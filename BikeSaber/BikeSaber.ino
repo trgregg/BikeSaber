@@ -681,9 +681,9 @@ void Sutro(){
     if( lessLight > 0) {
         for(int i=0; i< strip.numPixels(); i++) {
             if ( i % (lessLight+1) != 0) {  
-                strip.setPixelColor(i, strip.Color(0, 0, 0));
-            }
+          strip.setPixelColor(i, strip.Color(0, 0, 0));
         }
+    }
     }
     strip.show();
 }
@@ -953,9 +953,9 @@ int ReadToF() {
             Serial.println((char*)buffer);
         }
     }
-    
+	
     return range;
- }
+}
 
 
 /***********************************************************************/
@@ -1023,10 +1023,10 @@ void loop() {
     static uint8_t currentLedProgram = defaultLedProgram;
     static uint8_t previousLedProgram = defaultLedProgram;
     static uint8_t requestedLedProgram = defaultLedProgram;
-	    
+    
     static int32_t currentProgramPrioity = minimumProgramTimeMs; // need to be allowed to go negative
     static int32_t requestedProgramPrioity = 0;
-
+    
     
     static uint32_t ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
     
@@ -1044,39 +1044,39 @@ void loop() {
     // check Accel to see if we are moving
     /***********************************************************************/
     if (millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) {
-
-    		if (useAccel >= 1){
-            
-            // get the current accel data
-            int accelMagnitude = ReadAccel();
-            
-            // If the accel data is valid and we have significant movement, time how long we haven't been moving
-            if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
-                notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
-            } else {
-                notMovingTimer = 0;  // reset the counter since we are moving again
+        
+		if (useAccel >= 1){
+        
+        // get the current accel data
+        int accelMagnitude = ReadAccel();
+        
+        // If the accel data is valid and we have significant movement, time how long we haven't been moving
+        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+            notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
+        } else {
+            notMovingTimer = 0;  // reset the counter since we are moving again
                 localOverrideProgram = 0;
-            }
-            
-            // If we haven't been moving for a long time, override the program
-            if (notMovingTimer > notMovingTimeout) {
+        }
+        
+        // If we haven't been moving for a long time, override the program
+        if (notMovingTimer > notMovingTimeout) {
                 if (ledProgram != localOverrideProgram) {  // log that we are not moving if this is the first time here
-                    if(logToSerial == 1){
-                        char buffer[255];
+            if(logToSerial == 1){
+                char buffer[255];
                         sprintf(buffer, "%ld %d %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d",
                                 millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                                 notMovingTimer, localOverrideProgram);
-                        Serial.println((char*)buffer);
-                    }
-                }
+                Serial.println((char*)buffer);
+            }
+        }
                 localOverrideProgram = StillProgram; // go to a low power sparkly program
             }
     		}
 
         // update accel check timestamp
         previousAccelCheckMillis = millis();
-        
-    		// While we are here... Check the Time of Flight sensor for possible overrides
+		
+		// While we are here... Check the Time of Flight sensor for possible overrides
     		if (useToF > 0) {
       			localRange = ReadToF();
         		
@@ -1084,7 +1084,7 @@ void loop() {
                 globalOverrideProgram = ToFProgram;
                 range = localRange;
                 if(logToSerial == 1){
-          		        char buffer[255];
+		        char buffer[255];
           		        sprintf(buffer, "%ld %d %d %d %d: Time Of Flight Override Prg: %d localRange: %d",
                               millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                               globalOverrideProgram, localRange);
@@ -1176,7 +1176,7 @@ void loop() {
         requestedLedProgram = 0;
         
     }
-
+    
 
     /***********************************************************************/
     // Led overrides
@@ -1203,15 +1203,15 @@ void loop() {
         resetAllLedProgramStates();  
         
         // if this is the first time here, log the override program  
-        if(logToSerial == 1){
-            char buffer[255];
+            if(logToSerial == 1){
+                char buffer[255];
             sprintf(buffer,"%ld %d %d %d %d: Overiding to %d",
                     millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                     ledProgram);
-            Serial.println((char*)buffer);
+                Serial.println((char*)buffer);
+            }
         }
-    }
-    
+        
     /***********************************************************************/
     // Led update
     // update the LEDs based on the current program
@@ -1458,6 +1458,7 @@ void loop() {
         if (transmitMode == 1) {
             
             char radiopacket[RH_RF69_MAX_MESSAGE_LEN];
+            memset(radiopacket, 0, RH_RF69_MAX_MESSAGE_LEN);
             
             // generate a random new program with random priority
             int32_t tempPriority = (int32_t)(random(minimumProgramTimeMs, minimumProgramTimeMs*3/2));
@@ -1492,14 +1493,17 @@ void loop() {
                 Serial.println(buffer);
             }
 
+            // try going into idle mode first to try not to hand the radio
+            rf69.setModeIdle();
+            
             sprintf(radiopacket, "%d %ld %d %d", tempProgram, tempPriority, globalOverrideProgram, localRange);
             // Send a message!
             rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
-            rf69.waitPacketSent();
+            rf69.waitPacketSent(100);
             
             // put the radio back in rx mode
             // go through idle mode to try to clear any rx buffers
-            //rf69.setModeIdle();
+            rf69.setModeIdle();
             rf69.setModeRx();
             
             if(logToSerial == 1){
