@@ -93,15 +93,16 @@
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 // Time of Flight Sensor
-#include "Adafruit_VL6180X.h"
-Adafruit_VL6180X vl = Adafruit_VL6180X();
-
+//#include "Adafruit_VL6180X.h"
+//Adafruit_VL6180X vl = Adafruit_VL6180X();
+#include "Adafruit_VL53L0X.h"
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // Define structures and classes
 
 
 // Define variables and constants
-const int lessLight = 1;  // use this for longer strings. It will disable every other LED on brighter programs to limit power.
+const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
@@ -218,12 +219,12 @@ void setup()
     }
 
 ///////// setup Time of Flight stuff
-    Serial.println("Adafruit VL6180x test!");
-    if (! vl.begin()) {
+    Serial.println("Adafruit VL53L0X test");
+    if (!lox.begin()) {
       Serial.println("Failed to find ToF. Continuing without it.");
       useToF = 0;
     }
-    Serial.println("ToF found!");
+    Serial.println("VL53L0X ToF found!");
 
     
 ////// Setup the NeoPixel string
@@ -411,15 +412,17 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
             }
             else {
                 // for full string, just fill the full string with the current color
-                strip.fill(g_LedProgramColor,0, NUMPIXELS);
+//                strip.fill(g_LedProgramColor,0, NUMPIXELS);
+                for(int i=0; i < (strip.numPixels()); i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
+
             }
 
-            if ( lessLight > 0 ) {  //turn off every other pixel
-                for(int i=0; i < (strip.numPixels()); i++){
-                    i=i+lessLight;   //turn off every other pixel
-                    strip.setPixelColor(i, strip.Color(0, 0, 0));
-                }
-            }   
+//            if ( lessLight > 0 ) {  //turn off every other pixel
+//                for(int i=0; i < (strip.numPixels()); i++){
+//                    i=i+lessLight;   //turn off every other pixel
+//                    strip.setPixelColor(i, strip.Color(0, 0, 0));
+//                }
+//            }   
             
             strip.show();
             
@@ -750,6 +753,7 @@ void RunningLights(byte red, byte green, byte blue) {
     // use g_LedProgramCurrentPixel to track current position
     g_LedProgramCurrentPixel++;
     for(int i=0; i < strip.numPixels(); i++) {
+        i=i+lessLight;
         // sine wave, 3 offset waves make a rainbow!
         //float level = sin(i+Position) * 127 + 128;
         //setPixel(i,level,0,0);
@@ -855,6 +859,45 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
     return delayForNextUpdateMs;
 }
 
+/***********************************************************************/
+// ToF Wipe
+// Use the input from the ToF sensor to control a glowing ball
+/***********************************************************************/
+void ToFWipe(byte red, byte green, byte blue, int ballPosition) {
+    uint32_t color = strip.Color(  red, green, blue); 
+    
+    if (testMode >= 2) {Serial.print(" ballPosition: "); Serial.println(ballPosition);}
+    
+    // Draw ending pads filling just the end 1/10th of the string
+    strip.fill(155, 0, int(strip.numPixels()*.1)); 
+    strip.fill(155, (strip.numPixels() - (int(strip.numPixels()*.1))), strip.numPixels());
+
+    // Draw the moving ball
+//    strip.fill( color, ballPosition, ballPosition + 2 ); 
+      for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string for each sparkle
+          setPixel(ballPosition+j,red,green,blue);
+      }
+
+    strip.show();
+    strip.clear();
+}
+
+
+/***********************************************************************/
+// ToF Color
+// Use the input from the ToF sensor to control a glowing ball
+/***********************************************************************/
+void ToFColor(int range) {
+    
+    for(int i=0; i < (strip.numPixels()); i++) {
+        strip.setPixelColor(i, Wheel((range) & 255)); i=i+lessLight;
+    } 
+
+//    strip.fill(Wheel((range) & 255), 0, strip.numPixels()); 
+
+    strip.show();
+    strip.clear();
+}
 
 /***********************************************************************/
 // Read the accelerometer to monitor for motion
@@ -890,23 +933,28 @@ int ReadAccel() {
 /***********************************************************************/
 // Read the Time of Flight distance to override program
 /***********************************************************************/
-int ReadToF(int numLedPrograms) {
-    uint8_t maxRange = 300;
-    int ToFPrg = 0;
-    uint8_t range = vl.readRange();
-    uint8_t status = vl.readRangeStatus();
+int ReadToF() {
+    uint8_t range = 0;  
 
-    // If the ToF sensor status returns an error, such as not ready, or over range, set the ToF program to 0
-    if (status != VL6180X_ERROR_NONE) { ToFPrg = 0;}
+    VL53L0X_RangingMeasurementData_t measure;
+    lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
 
-    // If the ToF status is not an errot, get the range and divide it by the number of programs. This picks a program to play based on the range.
-    else {  ToFPrg = range / numLedPrograms; }
-	  
-	  if (testMode >= 2) {Serial.print("Range: "); Serial.println(range);}
+    // If the ToF sensor status returns an error, such as not ready, or over range, set the ToF program to 0    
+    if (measure.RangeStatus == 4) {  // phase failures have incorrect data
+        if (testMode >= 2) {Serial.println("ToF Out of Range");}
+    } else {
+        range = measure.RangeMilliMeter;
+        
+        if (testMode >= 0) {
+            char buffer[255];
+            sprintf(buffer, "Range: %d",
+                    measure.RangeMilliMeter);
+            Serial.println((char*)buffer);
+        }
+    }
     
-    return ToFPrg;
-    
-}
+    return range;
+ }
 
 
 /***********************************************************************/
@@ -939,10 +987,16 @@ void loop() {
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
     const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
-    const unsigned long AccelCheckPeriodMs = 100; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 10*1000; // how long to wait before giong to still program in ms
+    const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
+    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
     const int StillProgram = 21; // pick a program to run when we are still
+
+    // Time of Flight settings
+    const int ToFProgram = 24; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
+    static int range = 0; // Read the ToF sensor and use the range for changing the program
+    static int localRange = 0; // Used for remote units to send their range
+    static int requestedRemoteRange = 0; // Used for remote units to send their range
 
     // Broadcast timing
     const unsigned long transmitPeriodMs = 250; // how long to wait between broadcasts in ms
@@ -1022,21 +1076,25 @@ void loop() {
         previousAccelCheckMillis = millis();
         
     		// While we are here... Check the Time of Flight sensor for possible overrides
-    		if (useToF >= 1) {
-      			int ToFPrg = ReadToF(numLedPrograms);
-            
-            if (ToFPrg > 0) {
-
-                globalOverrideProgram = ToFPrg;
+    		if (useToF > 0) {
+      			localRange = ReadToF();
+        		
+        		if (localRange > 0) {
+                globalOverrideProgram = ToFProgram;
+                range = localRange;
                 if(logToSerial == 1){
           		        char buffer[255];
-          		        sprintf(buffer, "%ld %d %d %d %d: Time Of Flight Override Prg: %d",
+          		        sprintf(buffer, "%ld %d %d %d %d: Time Of Flight Override Prg: %d localRange: %d",
                               millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                              ToFPrg);
+                              globalOverrideProgram, localRange);
                       Serial.println((char*)buffer);
                 }
-            } else { globalOverrideProgram = 0 ;}
-    		}  
+            } else { 
+              globalOverrideProgram = 0 ;
+              range = 0 ;
+            }
+    		}
+        if ( requestedRemoteRange != 0) { range = requestedRemoteRange; }  // If we have a remote range, use it.
     }
     
     /***********************************************************************/
@@ -1264,6 +1322,17 @@ void loop() {
                 // variable update rate based on state of the program
                 ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 5, 0);
                 break;
+            case 23: // ToFWipe
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = 10;
+                ToFWipe(100,255,200, range);
+                break;
+            case 24: // ToFColor
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = 10;
+                ToFColor(range);
+                break;
+
         }
     }
     
@@ -1315,16 +1384,17 @@ void loop() {
                 int tempProgram = 0;
                 int tempPriority = 0;
                 int tempGlobalOverrideProgram = 0;
+                int tempRange = 0;
                 int numFound = 0;
                 
-                numFound = sscanf(data, "%d %d %d", &tempProgram, &tempPriority, &tempGlobalOverrideProgram);
+                numFound = sscanf(data, "%d %d %d %d", &tempProgram, &tempPriority, &tempGlobalOverrideProgram, &tempRange);
                 
                 // if we got two items parsed out of the packet, use them for req
-                if (numFound == 3){
+                if (numFound == 4){
                     if(logToSerial == 1){
-                        sprintf(buffer, "%ld %d %d %d %d: Decoded: %d %d %d",
+                        sprintf(buffer, "%ld %d %d %d %d: Decoded: %d %d %d %d",
                                 millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                                tempProgram, tempPriority, tempGlobalOverrideProgram);
+                                tempProgram, tempPriority, tempGlobalOverrideProgram, tempRange);
                         Serial.println(buffer);
                     }
                     
@@ -1341,9 +1411,11 @@ void loop() {
                         }
                     }
                     
-					// Populate the requestedRemoteGlobalOverride, which will also set it to 0 if the remote override has gone away.
-					requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
-					
+          					// Populate the requestedRemoteGlobalOverride and requestedRemoteRange, which will also set it to 0 if the remote override has gone away.
+          					requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
+                    requestedRemoteRange = (uint8_t) tempRange; 
+    
+              
                     // if the recieved packet has the same program, try to sync the priority
                     if(currentLedProgram == tempProgram){
                         currentProgramPrioity = tempPriority;
@@ -1410,15 +1482,16 @@ void loop() {
             }
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d %d: Sending %d %d %d; last tx: %dms (%d late)",
+                sprintf(buffer, "%ld %d %d %d %d: Sending %d %d %d %d; last tx: %dms (%d late)",
                         millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                        tempProgram, tempPriority, globalOverrideProgram, (int)(millis() - previousTransmitMillis),
+                        tempProgram, tempPriority, globalOverrideProgram, localRange,
+                        (int)(millis() - previousTransmitMillis),
                         (int)((millis() - previousTransmitMillis) - transmitPeriodMs)
                         );
                 Serial.println(buffer);
             }
 
-            sprintf(radiopacket, "%d %ld %d", tempProgram, tempPriority, globalOverrideProgram);
+            sprintf(radiopacket, "%d %ld %d %d", tempProgram, tempPriority, globalOverrideProgram, localRange);
             // Send a message!
             rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
             rf69.waitPacketSent();
