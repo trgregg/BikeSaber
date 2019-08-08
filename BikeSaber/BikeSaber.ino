@@ -104,7 +104,7 @@ const int lessLight = 1;  // use this for longer strings. It will add this numbe
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
-static int useToF = 1; // we will set this to 0 if we can't find Time of Flight sensor 
+static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 
 
 // Prototypes
@@ -743,6 +743,7 @@ void Fire(int Cooling, int Sparking) {
     
     // Step 4.  Convert heat to LED colors
     for( int j = 0; j < strip.numPixels(); j++) {
+        j= j+lessLight;
         setPixelHeatColor(j, heat[j] );
     }
     
@@ -1297,7 +1298,7 @@ void loop() {
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
                 ledUpdatePeriodMs = 15;
-                Fire(60,200);
+                Fire(40,200);
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
