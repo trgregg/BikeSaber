@@ -100,7 +100,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 
 // Define variables and constants
-const int lessLight = 2;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
@@ -133,7 +133,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // ***************************************************************************
 // Stuff for LED string test
 // ***************************************************************************
-#define NUMPIXELS 130  // For Bike Whips
+#define NUMPIXELS 150  // For Bike Whips
 //#define NUMPIXELS 50 // For Bike Wheels
 //#define NUMPIXELS 900  // For Frence
 #define PIXEL_PIN 6
@@ -403,9 +403,13 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
             if(halfString){
                 // for half string flashing, use one side for red and one side for blue
                 if(g_LedProgramColor == colorsForFlashing[0]){
-                    strip.fill(g_LedProgramColor, 0, (NUMPIXELS/2));
+                    for(int i=0; i < (NUMPIXELS/2); i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
+
+//                    strip.fill(g_LedProgramColor, 0, (NUMPIXELS/2));
                 } else {
-                    strip.fill(g_LedProgramColor, (NUMPIXELS/2), NUMPIXELS);
+                    for(int i=NUMPIXELS/2; i < NUMPIXELS; i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
+
+//                    strip.fill(g_LedProgramColor, (NUMPIXELS/2), NUMPIXELS);
                 }
             }
             else {
@@ -515,13 +519,13 @@ void rainbowCycle() {
 void theaterChase(uint32_t color) {
     // use g_LedProgramCurrentPixel for current pixel position
     
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3+lessLight) {
         //turn off every third pixel from the previous run
         strip.setPixelColor(i+g_LedProgramCurrentPixel-1, 0);
     }
     
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+g_LedProgramCurrentPixel, color);    //set every third pixel
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3+lessLight) {
+        strip.setPixelColor(i+g_LedProgramCurrentPixel, color);    //set every third pixel 
     }
     strip.show();
 
@@ -529,7 +533,7 @@ void theaterChase(uint32_t color) {
     g_LedProgramCurrentPixel++;
     
     // reset to first pixel after moving 3
-    if(g_LedProgramCurrentPixel >= 3) g_LedProgramCurrentPixel = 0;
+    if(g_LedProgramCurrentPixel >= 3+lessLight) g_LedProgramCurrentPixel = 0;
 
 }
 
@@ -540,19 +544,20 @@ void theaterChaseRainbow() {
     // use g_LedProgramCurrentPixel for current pixel position
     // use g_LedProgramColor for rainbox color position
     
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3+lessLight) {
         strip.setPixelColor(i+g_LedProgramCurrentPixel-1, 0);        //turn every third pixel off
     }
     
-    for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
+    for (uint16_t i=0; i < strip.numPixels(); i=i+3+lessLight) {
         strip.setPixelColor(i+g_LedProgramCurrentPixel, Wheel( (i+g_LedProgramColor) % 255));    //turn every third pixel on
     }
+ 
     strip.show();
 
     // move the starting pixel forward one
     g_LedProgramCurrentPixel++;
     // reset to first pixel after moving 3
-    if(g_LedProgramCurrentPixel >= 3) g_LedProgramCurrentPixel = 0;
+    if(g_LedProgramCurrentPixel >= 3+lessLight) g_LedProgramCurrentPixel = 0;
     
     // increment the initial color position
     g_LedProgramColor++;
@@ -570,13 +575,13 @@ uint32_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteo
     
     // initialize or reset the initial meteor position
     if(g_LedProgramState == 0){
-        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/2);
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/4);
         g_LedProgramState++;
     }
     
     // reset the meteor position after it shoots through
     if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
-        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/2);
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/4);
     }
     
     
@@ -1253,17 +1258,13 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 theaterChase(strip.Color(0, 0, 255));
                 break;
-            case 7: // red color chase
+            case 7: // random color chase
                 ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 255, 0));
+                theaterChase(random(0,555555));
                 break;
             case 8: // green color chase
                 ledUpdatePeriodMs = 50;
                 theaterChase(strip.Color(255, 0, 0));
-                break;
-            case 9: // purple color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 75, 75));
                 break;
             case 10: // color chase
                 ledUpdatePeriodMs = 50;
