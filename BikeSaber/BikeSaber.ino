@@ -104,7 +104,8 @@ const int lessLight = 1;  // use this for longer strings. It will add this numbe
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
-static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+static int useToF = 1; // we will set this to 0 if we can't find Time of Flight sensor 
+static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
 
 
 // Prototypes
@@ -124,6 +125,7 @@ static int useToF = 0; // we will set this to 0 if we can't find Time of Flight 
 #define RFM69_CS      8
 #define RFM69_INT     3
 #define RFM69_RST     4
+#define ANALOG1       A1
 //#define LED           13
 //#endif
 
@@ -869,19 +871,17 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
 // Use the input from the ToF sensor to control a glowing ball
 /***********************************************************************/
 void ToFWipe(byte red, byte green, byte blue, int ballPosition) {
-    uint32_t color = strip.Color(  red, green, blue); 
-    
-    if (testMode >= 2) {Serial.print(" ballPosition: "); Serial.println(ballPosition);}
-    
+    uint32_t color = strip.Color(red, green, blue); 
+    ballPosition = ballPosition % strip.numPixels();
+
     // Draw ending pads filling just the end 1/10th of the string
-    strip.fill(155, 0, int(strip.numPixels()*.1)); 
-    strip.fill(155, (strip.numPixels() - (int(strip.numPixels()*.1))), strip.numPixels());
+    strip.fill( color, 0, int(strip.numPixels()*.1) ); 
+    strip.fill(color, (strip.numPixels() - (int(strip.numPixels()*.1))), strip.numPixels());
 
     // Draw the moving ball
-//    strip.fill( color, ballPosition, ballPosition + 2 ); 
-      for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string 
-          setPixel(ballPosition+j,red,green,blue);
-      }
+    for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in about 2% of the string 
+        strip.setPixelColor(ballPosition+j, Wheel((ballPosition) & 255));
+    }
 
     strip.show();
     strip.clear();
@@ -947,10 +947,10 @@ int ReadToF() {
     // If the ToF sensor status returns an error, such as not ready, or over range, set the ToF program to 0    
     if (measure.RangeStatus == 4) {  // phase failures have incorrect data
         if (testMode >= 2) {Serial.println("ToF Out of Range");}
-    } else {
+    } else if ( measure.RangeMilliMeter < 3000) {
         range = measure.RangeMilliMeter;
         
-        if (testMode >= 0) {
+        if (testMode >= 2) {
             char buffer[255];
             sprintf(buffer, "Range: %d",
                     measure.RangeMilliMeter);
@@ -998,7 +998,7 @@ void loop() {
     const int StillProgram = 21; // pick a program to run when we are still
 
     // Time of Flight settings
-    const int ToFProgram = 24; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
+    const int ToFProgram = 23; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
     static int range = 0; // Read the ToF sensor and use the range for changing the program
     static int localRange = 0; // Used for remote units to send their range
     static int requestedRemoteRange = 0; // Used for remote units to send their range
@@ -1030,7 +1030,6 @@ void loop() {
     
     static int32_t currentProgramPrioity = minimumProgramTimeMs; // need to be allowed to go negative
     static int32_t requestedProgramPrioity = 0;
-    
     
     static uint32_t ledUpdatePeriodMs = 10;  // this is delay waited before looping back through the LED case. A longer time here means the LEDs stay static with the current string display. This also blocks looking for recieved packets.
     
@@ -1080,7 +1079,7 @@ void loop() {
         // update accel check timestamp
         previousAccelCheckMillis = millis();
 		
-		// While we are here... Check the Time of Flight sensor for possible overrides
+ 		    // While we are here... Check the Time of Flight sensor for possible overrides
     		if (useToF > 0) {
       			localRange = ReadToF();
         		
@@ -1099,7 +1098,22 @@ void loop() {
               range = 0 ;
             }
     		}
-        if ( requestedRemoteRange != 0) { range = requestedRemoteRange; }  // If we have a remote range, use it.
+        
+        // While we are here... Check for an analog input that may want to override
+        if (useAnalog > 0) {            
+            int analogInput1 = analogRead(ANALOG1);  // Gives a value from 0-1024
+            
+           if (analogInput1 < 100) { globalOverrideProgram = 0 ;}//do nothing... default to the synced program, or the override // 
+           if (analogInput1 > 200) { globalOverrideProgram = 10; }// theather rainbow chase
+           if (analogInput1 > 300) { globalOverrideProgram = 15; }// Meteor
+           if (analogInput1 > 400) { globalOverrideProgram = 16; }// Strobe
+           if (analogInput1 > 500) { globalOverrideProgram = 17; }// Fire
+           if (analogInput1 > 600) { globalOverrideProgram = 19; }// Sparkle
+           if (analogInput1 > 700) { globalOverrideProgram = 20; }// Sutro
+           if (analogInput1 > 800) { globalOverrideProgram = 21; }// Slow Sparkle
+        }
+        
+        if ( requestedRemoteRange != 0) { range = requestedRemoteRange; }  // If we have a remote range, use it.        
     }
     
     /***********************************************************************/
@@ -1332,6 +1346,10 @@ void loop() {
                 // variable update rate based on state of the program
                 ledUpdatePeriodMs = 10;
                 ToFColor(range);
+                break;
+            case 25: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
+                ledUpdatePeriodMs = 15;
+                Fire((range & 255),200);
                 break;
 
         }
