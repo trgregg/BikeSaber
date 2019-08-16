@@ -79,13 +79,9 @@
 
 // Include application, user and local libraries
 #include "RH_RF69.h"
-#include "Adafruit_NeoPixel.h"
 
 // Accelerometer 
 #include "Adafruit_LIS3DH.h"
-// Accelerometer Hardware SPI Comms
-//#define LIS3DH_CS 10
-//Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
 
 // Accelerometer via I2C
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
@@ -99,13 +95,55 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 // Define structures and classes
 
 
+//// BIKE LIGHTS
+//// Define variables and constants
+//const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+//static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+//static int useAccel = 1; // we will set this to 0 if we can't find accel
+//static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+//static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
+//#define NUMPIXELS 130  // For Bike Whips
+
+
+//// Pyramids
+//// Define variables and constants
+//const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+//static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+//static int useAccel = 0; // we will set this to 0 if we can't find accel
+//static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+//static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
+//#define NUMPIXELS 300  // For Pyramids
+
+
+
+// FOR FENCE
 // Define variables and constants
-const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+const int lessLight = 4;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
-const int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
-static int useAccel = 1; // we will set this to 0 if we can't find accel
-static int useToF = 1; // we will set this to 0 if we can't find Time of Flight sensor 
+static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+static int useAccel = 0; // we will set this to 0 if we can't find accel
+static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
+#define NUMPIXELS 900  // For Fence
+//// Reminder: Lower sutro's delay from 20 to 10 , decrease Fire's cooling from 20 to to 5-0
+
+
+//// FOR CONTROLLER
+//// Define variables and constants
+//const int lessLight = 0;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+//static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+//static int useAccel = 0; // we will set this to 0 if we can't find accel
+//static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+//static int useAnalog = 1; // we will set this to 0 if we don't want to look at the analog input for overrides
+//#define NUMPIXELS 130  // For Controller
+
+//// DMA example for reference... however this blocks RF receive for some reason
+//#include <Adafruit_NeoPixel_ZeroDMA.h>
+//Adafruit_NeoPixel_ZeroDMA strip = Adafruit_NeoPixel_ZeroDMA(NUMPIXELS, PIXEL_PIN, NEO_RGB);
+
 
 
 // Prototypes
@@ -113,13 +151,27 @@ static int useAnalog = 0; // we will set this to 0 if we don't want to look at t
 
 
 // Setup
+// ***************************************************************************
+// Stuff for LED string
+// ***************************************************************************
+//#define NUMPIXELS 130  // For Bike Whips
+//#define NUMPIXELS 300  // For full strips
+//#define NUMPIXELS 50 // For Bike Wheels
+//#define NUMPIXELS 900  // For Frence
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
+//#define PIXEL_PIN 6
+//#include <Adafruit_NeoPixel_ZeroDMA.h>
+//Adafruit_NeoPixel_ZeroDMA strip = Adafruit_NeoPixel_ZeroDMA(NUMPIXELS, PIXEL_PIN, NEO_RGB);
+#define PIXEL_PIN 11
+#include <Adafruit_NeoPixel_ZeroDMA.h>
+Adafruit_NeoPixel_ZeroDMA strip = Adafruit_NeoPixel_ZeroDMA(NUMPIXELS, PIXEL_PIN, NEO_RGB);
 
 // ***************************************************************************
 // Stuff for RFM69
 // ***************************************************************************
 // Add setup code
 #define RF69_FREQ 915.0
-
 
 //#if defined (ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
 #define RFM69_CS      8
@@ -131,16 +183,6 @@ static int useAnalog = 0; // we will set this to 0 if we don't want to look at t
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-
-// ***************************************************************************
-// Stuff for LED string test
-// ***************************************************************************
-#define NUMPIXELS 150  // For Bike Whips
-//#define NUMPIXELS 50 // For Bike Wheels
-//#define NUMPIXELS 900  // For Frence
-#define PIXEL_PIN 6
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
 
 // ***************************************************************************
 // Stuff for timer test
@@ -159,8 +201,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_
 void setup()
 {
     Serial.begin(115200);
-    //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
-     if (testMode >= 1) {while (!Serial);}     // will pause Zero, Leonardo, etc until serial console opens
+     if (testMode >= 2) {while (!Serial);}     // will pause Zero, Leonardo, etc until serial console opens
 
     pinMode(LED_PIN, OUTPUT);
     randomSeed(millis()%255);
@@ -204,32 +245,40 @@ void setup()
 
 
 ///////// setup accelerometer stuff
-    Serial.println("LIS3DH test!");
+    Serial.println("LIS3DH test");
     
-    if (! lis.begin(0x18)) {   // change this to 0x19 for alternative i2c address
-      Serial.println("Couldnt start accel! Continuing without it.");
-      useAccel = 0;
-    } else {
-      Serial.println("LIS3DH found!");
-      
-      lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
-      
-      Serial.print("Range = "); Serial.print(2 << lis.getRange());  
-      Serial.println("G");
+    if (useAccel ==1) { 
+      if (! lis.begin(0x18)) {   // change this to 0x19 for alternative i2c address
+          Serial.println("Couldnt start accel. Continuing without it.");
+          useAccel = 0;
+        
+        } else {
+          Serial.println("LIS3DH found!");
+          
+          lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
+          
+          Serial.print("Range = "); Serial.print(2 << lis.getRange());  
+          Serial.println("G");
+        }
     }
 
 ///////// setup Time of Flight stuff
-    Serial.println("Adafruit VL53L0X test");
-    if (!lox.begin()) {
-      Serial.println("Failed to find ToF. Continuing without it.");
-      useToF = 0;
+    Serial.println("Time of Flight VL53L0X test");
+    if ( useToF == 1) {
+        if (! lox.begin(0x29)) {
+          Serial.println("Failed to find ToF. Continuing without it.");
+          useToF = 0;
+        
+        } else {
+        Serial.println("VL53L0X ToF found!");
+        }
     }
-    Serial.println("VL53L0X ToF found!");
-
     
 ////// Setup the NeoPixel string
+    Serial.println("Adafruit NeoPixel initializing...");
     strip.begin(); // This initializes the NeoPixel library.
     strip.show(); // start with everything off
+    Serial.println("Adafruit NeoPixel  initialized!");
     
 }
 
@@ -405,11 +454,11 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
             if(halfString){
                 // for half string flashing, use one side for red and one side for blue
                 if(g_LedProgramColor == colorsForFlashing[0]){
-                    for(int i=0; i < (NUMPIXELS/2); i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
+                    for(int i=0; i < (NUMPIXELS/2); i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight/2;} 
 
 //                    strip.fill(g_LedProgramColor, 0, (NUMPIXELS/2));
                 } else {
-                    for(int i=NUMPIXELS/2; i < NUMPIXELS; i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
+                    for(int i=NUMPIXELS/2; i < NUMPIXELS; i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight/2;} 
 
 //                    strip.fill(g_LedProgramColor, (NUMPIXELS/2), NUMPIXELS);
                 }
@@ -419,14 +468,7 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
 //                strip.fill(g_LedProgramColor,0, NUMPIXELS);
                 for(int i=0; i < (strip.numPixels()); i++) {strip.setPixelColor(i, g_LedProgramColor); i=i+lessLight;} 
 
-            }
-
-//            if ( lessLight > 0 ) {  //turn off every other pixel
-//                for(int i=0; i < (strip.numPixels()); i++){
-//                    i=i+lessLight;   //turn off every other pixel
-//                    strip.setPixelColor(i, strip.Color(0, 0, 0));
-//                }
-//            }   
+            }  
             
             strip.show();
             
@@ -981,7 +1023,7 @@ void loop() {
     static bool isLEDOn = false;
 
     // Logging control
-    uint8_t logToSerial = 1;
+    uint8_t logToSerial = 0;
     
     // timer statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
@@ -993,12 +1035,12 @@ void loop() {
     static unsigned long previousAccelCheckMillis = millis();
     const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 60*1000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 3*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
     const int StillProgram = 21; // pick a program to run when we are still
 
     // Time of Flight settings
-    const int ToFProgram = 23; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
+    const int ToFProgram = 24; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
     static int range = 0; // Read the ToF sensor and use the range for changing the program
     static int localRange = 0; // Used for remote units to send their range
     static int requestedRemoteRange = 0; // Used for remote units to send their range
@@ -1011,7 +1053,7 @@ void loop() {
     // led program controls
     const unsigned long heartBeatLedPeriodMs = 100; // period for flashing the heartbeat LED
     const unsigned long priorityDecrementPeriodMs = 1;  // decrement the priority every X milliseconds
-    const unsigned long minimumProgramTimeMs = 5000;  // How long to run a program after switching programs
+    const unsigned long minimumProgramTimeMs = 10000;  // How long to run a program after switching programs
     
     const uint8_t numLedPrograms = 20; // max case id, not count
 
@@ -1104,7 +1146,7 @@ void loop() {
             int analogInput1 = analogRead(ANALOG1);  // Gives a value from 0-1024
             
            if (analogInput1 < 100) { globalOverrideProgram = 0 ;}//do nothing... default to the synced program, or the override // 
-           if (analogInput1 > 200) { globalOverrideProgram = 10; }// theather rainbow chase
+           if (analogInput1 > 200) { globalOverrideProgram = 5; }//  rainbow 
            if (analogInput1 > 300) { globalOverrideProgram = 15; }// Meteor
            if (analogInput1 > 400) { globalOverrideProgram = 16; }// Strobe
            if (analogInput1 > 500) { globalOverrideProgram = 17; }// Fire
@@ -1165,8 +1207,10 @@ void loop() {
                 Serial.println((char*)buffer);
             }
             
-            // give the new program a blank slate to play with
-            resetAllLedProgramStates();
+            // give the new program a blank slate to play with, but only if we aren't using an override
+            if (localOverrideProgram == 0 && requestedRemoteGlobalOverride == 0 && globalOverrideProgram == 0 && overrideProgram ==0) { 
+                resetAllLedProgramStates(); 
+            }
             
             // set the priority so it runs at least as long as our minimum
             currentProgramPrioity = requestedProgramPrioity + minimumProgramTimeMs;
@@ -1223,7 +1267,7 @@ void loop() {
         // if this is the first time here, log the override program  
             if(logToSerial == 1){
                 char buffer[255];
-            sprintf(buffer,"%ld %d %d %d %d: Overiding to %d",
+            sprintf(buffer,"%ld %d %d %d %d: Changing to %d",
                     millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                     ledProgram);
                 Serial.println((char*)buffer);
@@ -1246,19 +1290,19 @@ void loop() {
                 }
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
-                ledUpdatePeriodMs = 3;
+                ledUpdatePeriodMs = 10;
                 colorWipe (0, 150, 0);
                 break;
             case 1: // green color wipe
-                ledUpdatePeriodMs = 3;
+                ledUpdatePeriodMs = 10;
                 colorWipe (150, 0, 0);
                 break;
             case 2: // blue color wipe
-                ledUpdatePeriodMs = 3;
+                ledUpdatePeriodMs = 10;
                 colorWipe (0, 0, 150);
                 break;
             case 3: // purple color wipe
-                ledUpdatePeriodMs = 3;
+                ledUpdatePeriodMs = 10;
                 colorWipe (0, 75, 75);
                 break;
             case 4: // rainbow
@@ -1281,6 +1325,10 @@ void loop() {
                 ledUpdatePeriodMs = 50;
                 theaterChase(strip.Color(255, 0, 0));
                 break;
+            case 9: // MORE Sparkle (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
+                // variable update rate based on state of the program
+                ledUpdatePeriodMs = Sparkle(255, 255, 255, 4, 10, 5);
+                break;
             case 10: // color chase
                 ledUpdatePeriodMs = 50;
                 theaterChaseRainbow();
@@ -1298,12 +1346,12 @@ void loop() {
                 ledUpdatePeriodMs = policeChinaMode2 (10, 20, 300, true); // china Police Mode Half and Half variable:
                 break;
             case 14: // color wipe random color and back to black
-                ledUpdatePeriodMs = 3;
+                ledUpdatePeriodMs = 10;
                 colorWipe (Wheel(random(0,255)));
                 break;
-            case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay
-                ledUpdatePeriodMs = 10;
-                meteorRain(100,255,200, 10, 50, true);
+            case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
+                ledUpdatePeriodMs = 5;
+                meteorRain(100,255,200, 10, 70, true);
                 break;
             case 16:  // Strobe!
                 // variable update rate based on state of the program
@@ -1311,8 +1359,8 @@ void loop() {
                 ledUpdatePeriodMs = Strobe(150,100,200, 10, 25, 500);
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-                ledUpdatePeriodMs = 15;
-                Fire(40,200);
+                ledUpdatePeriodMs = 10;
+                Fire(30,200);
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
@@ -1433,6 +1481,7 @@ void loop() {
           					// Populate the requestedRemoteGlobalOverride and requestedRemoteRange, which will also set it to 0 if the remote override has gone away.
           					requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
                     requestedRemoteRange = (uint8_t) tempRange; 
+                    if ( requestedRemoteGlobalOverride !=0 ) {transmitMode = 0; } else { transmitMode = 1; } // if there's a global override, stop transmitting.
     
               
                     // if the recieved packet has the same program, try to sync the priority
@@ -1517,7 +1566,7 @@ void loop() {
             sprintf(radiopacket, "%d %ld %d %d", tempProgram, tempPriority, globalOverrideProgram, localRange);
             // Send a message!
             rf69.send((uint8_t*)radiopacket, strlen(radiopacket));
-            rf69.waitPacketSent(100);
+            rf69.waitPacketSent(50);
             
             // put the radio back in rx mode
             // go through idle mode to try to clear any rx buffers
