@@ -95,20 +95,20 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 // Define structures and classes
 
 
-//// BIKE LIGHTS
-//// Define variables and constants
-//const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
-//const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
-//static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
-//static int useAccel = 1; // we will set this to 0 if we can't find accel
-//static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
-//static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-//#define NUMPIXELS 130  // For Bike Whips
+// BIKE LIGHTS
+// Define variables and constants
+const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+static int useAccel = 1; // we will set this to 0 if we can't find accel
+static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
+#define NUMPIXELS 130  // For Bike Whips
 
 
 //// Pyramids
 //// Define variables and constants
-//const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int lessLight = 2;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 //const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 //static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 //static int useAccel = 0; // we will set this to 0 if we can't find accel
@@ -118,15 +118,15 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 
 
-// FOR FENCE
-// Define variables and constants
-const int lessLight = 4;  // use this for longer strings. It will add this number to the LED to skip to limit power.
-const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
-static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
-static int useAccel = 0; // we will set this to 0 if we can't find accel
-static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
-static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-#define NUMPIXELS 900  // For Fence
+//// FOR FENCE
+//// Define variables and constants
+//const int lessLight = 4;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
+//static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
+//static int useAccel = 0; // we will set this to 0 if we can't find accel
+//static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
+//static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
+//#define NUMPIXELS 900  // For Fence
 //// Reminder: Lower sutro's delay from 20 to 10 , decrease Fire's cooling from 20 to to 5-0
 
 
@@ -158,11 +158,13 @@ static int useAnalog = 0; // we will set this to 0 if we don't want to look at t
 //#define NUMPIXELS 300  // For full strips
 //#define NUMPIXELS 50 // For Bike Wheels
 //#define NUMPIXELS 900  // For Frence
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
+//
 //#define PIXEL_PIN 6
-//#include <Adafruit_NeoPixel_ZeroDMA.h>
-//Adafruit_NeoPixel_ZeroDMA strip = Adafruit_NeoPixel_ZeroDMA(NUMPIXELS, PIXEL_PIN, NEO_RGB);
+//#include <Adafruit_NeoPixel.h>
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_RGB + NEO_KHZ800); // for 8mm NeoPixels
+
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
 #define PIXEL_PIN 11
 #include <Adafruit_NeoPixel_ZeroDMA.h>
 Adafruit_NeoPixel_ZeroDMA strip = Adafruit_NeoPixel_ZeroDMA(NUMPIXELS, PIXEL_PIN, NEO_RGB);
@@ -1048,7 +1050,8 @@ void loop() {
     // Broadcast timing
     const unsigned long transmitPeriodMs = 250; // how long to wait between broadcasts in ms
     const int minRssiThreshold = -80;  // recieve threshold
-
+    const unsigned long overrideCoastMs = 5000;
+    static int timeSinceGlobalOverride = 0;
     
     // led program controls
     const unsigned long heartBeatLedPeriodMs = 100; // period for flashing the heartbeat LED
@@ -1090,30 +1093,30 @@ void loop() {
     /***********************************************************************/
     if (millis() - previousAccelCheckMillis >= AccelCheckPeriodMs) {
         
-		if (useAccel >= 1){
-        
-        // get the current accel data
-        int accelMagnitude = ReadAccel();
-        
-        // If the accel data is valid and we have significant movement, time how long we haven't been moving
-        if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
-            notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
-        } else {
-            notMovingTimer = 0;  // reset the counter since we are moving again
+    		if (useAccel >= 1){
+            
+            // get the current accel data
+            int accelMagnitude = ReadAccel();
+            
+            // If the accel data is valid and we have significant movement, time how long we haven't been moving
+            if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+                notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
+            } else {
+                notMovingTimer = 0;  // reset the counter since we are moving again
                 localOverrideProgram = 0;
-        }
-        
-        // If we haven't been moving for a long time, override the program
-        if (notMovingTimer > notMovingTimeout) {
-                if (ledProgram != localOverrideProgram) {  // log that we are not moving if this is the first time here
-            if(logToSerial == 1){
-                char buffer[255];
-                        sprintf(buffer, "%ld %d %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d",
-                                millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                                notMovingTimer, localOverrideProgram);
-                Serial.println((char*)buffer);
             }
-        }
+            
+            // If we haven't been moving for a long time, override the program
+            if (notMovingTimer > notMovingTimeout) {
+                if (ledProgram != localOverrideProgram) {  // log that we are not moving if this is the first time here
+                    if(logToSerial == 1){
+                        char buffer[255];
+                                sprintf(buffer, "%ld %d %d %d %d: Motion timeout still for %d. LocalOverridePrg: %d",
+                                        millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                                        notMovingTimer, localOverrideProgram);
+                        Serial.println((char*)buffer);
+                    }
+                }
                 localOverrideProgram = StillProgram; // go to a low power sparkly program
             }
     		}
@@ -1152,7 +1155,8 @@ void loop() {
            if (analogInput1 > 500) { globalOverrideProgram = 17; }// Fire
            if (analogInput1 > 600) { globalOverrideProgram = 19; }// Sparkle
            if (analogInput1 > 700) { globalOverrideProgram = 20; }// Sutro
-           if (analogInput1 > 800) { globalOverrideProgram = 21; }// Slow Sparkle
+           if (analogInput1 > 800) { globalOverrideProgram = 12; }// China Police mode
+           if (analogInput1 > 900) { globalOverrideProgram = 21; }// Slow Sparkle
         }
         
         if ( requestedRemoteRange != 0) { range = requestedRemoteRange; }  // If we have a remote range, use it.        
@@ -1256,7 +1260,9 @@ void loop() {
   	ledProgram = currentLedProgram; // Set the program to play to the sync'ed current program
   	if ( localOverrideProgram !=0 ) { ledProgram = localOverrideProgram; }  // This override is generated locally, and only affects locally. Used for sleeping.
   	if ( requestedRemoteGlobalOverride !=0 ) {ledProgram = requestedRemoteGlobalOverride; }  // This override is received from other units. Used for other units with sensors that want to override everyone.
-  	if ( globalOverrideProgram !=0 ) { ledProgram = globalOverrideProgram; }  // This override is generated locally, but we want to transmit to all other units.
+  	if ( globalOverrideProgram !=0 ) { 
+  	    ledProgram = globalOverrideProgram;  // This override is generated locally, but we want to transmit to all other units.
+    }  
     if ( overrideProgram != 0 ) { ledProgram = overrideProgram;}  // use the manual override if it exists for testing patterns
   		
     // Log if we have any newly added overrides 
@@ -1445,25 +1451,55 @@ void loop() {
             }
 
             char *data = (char*)packet;
-              
-            // check the packet's rssi
-            if(lastRssi > minRssiThreshold){
-                int tempProgram = 0;
-                int tempPriority = 0;
-                int tempGlobalOverrideProgram = 0;
-                int tempRange = 0;
-                int numFound = 0;
+            int tempProgram = 0;
+            int tempPriority = 0;
+            int tempGlobalOverrideProgram = 0;
+            int tempRange = 0;
+            int numFound = 0;
+            
+            numFound = sscanf(data, "%d %d %d %d", &tempProgram, &tempPriority, &tempGlobalOverrideProgram, &tempRange);
+            
+            // if we got two items parsed out of the packet, use them for req
+            if (numFound == 4){
+                if(logToSerial == 1){
+                    sprintf(buffer, "%ld %d %d %d %d: Decoded: %d %d %d %d",
+                            millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                            tempProgram, tempPriority, tempGlobalOverrideProgram, tempRange);
+                    Serial.println(buffer);
+                }              
                 
-                numFound = sscanf(data, "%d %d %d %d", &tempProgram, &tempPriority, &tempGlobalOverrideProgram, &tempRange);
+                // Populate the requestedRemoteGlobalOverride and requestedRemoteRange, which will also set it to 0 if the remote override has gone away.
+                requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
+                requestedRemoteRange = (uint8_t) tempRange;
                 
-                // if we got two items parsed out of the packet, use them for req
-                if (numFound == 4){
+                if ( requestedRemoteGlobalOverride != 0 ) { // if there's a global override, stop transmitting.
+                    transmitMode = 0;
+
+                    notMovingTimer = 0;  // reset the notMoving counter so we stay awake after a global override
+                    localOverrideProgram = 0;
+                    
+                    timeSinceGlobalOverride = millis(); 
                     if(logToSerial == 1){
-                        sprintf(buffer, "%ld %d %d %d %d: Decoded: %d %d %d %d",
+                        sprintf(buffer, "%ld %d %d %d %d: Global Override rx'd reqPri %d %d %d",
                                 millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                                tempProgram, tempPriority, tempGlobalOverrideProgram, tempRange);
-                        Serial.println(buffer);
+                                requestedLedProgram, requestedProgramPrioity, requestedRemoteGlobalOverride);
+                        Serial.println(buffer); 
                     }
+                } else {                     
+                    if ( (millis() - timeSinceGlobalOverride > overrideCoastMs) && timeSinceGlobalOverride !=0 ) { 
+                        transmitMode = 1;
+                        timeSinceGlobalOverride = 0;
+                        if(logToSerial == 1){
+                            sprintf(buffer, "%ld %d %d %d %d: Global Override Coast Done. %ld Returning to regular program.",
+                                    millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
+                                    timeSinceGlobalOverride);
+                            Serial.println(buffer);
+                        }
+                    }
+                } 
+
+                // check the packet's rssi
+                if(lastRssi > minRssiThreshold){
                     
                     // if the new packet has a higher priority than our curren req
                     // use it.
@@ -1478,12 +1514,6 @@ void loop() {
                         }
                     }
                     
-          					// Populate the requestedRemoteGlobalOverride and requestedRemoteRange, which will also set it to 0 if the remote override has gone away.
-          					requestedRemoteGlobalOverride = (uint8_t) tempGlobalOverrideProgram;
-                    requestedRemoteRange = (uint8_t) tempRange; 
-                    if ( requestedRemoteGlobalOverride !=0 ) {transmitMode = 0; } else { transmitMode = 1; } // if there's a global override, stop transmitting.
-    
-              
                     // if the recieved packet has the same program, try to sync the priority
                     if(currentLedProgram == tempProgram){
                         currentProgramPrioity = tempPriority;
@@ -1497,8 +1527,8 @@ void loop() {
                                 numFound, data);
                         Serial.println(buffer);
                     }
-                }
-            } // end if rssi threshold
+                } // end if rssi threshold
+            } // end if num found
         } // end if recv packet
         else {
             if(logToSerial == 1){
