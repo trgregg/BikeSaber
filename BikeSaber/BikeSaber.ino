@@ -103,19 +103,20 @@ static int transmitMode = 1;  // use this for BikeSabers that we only want to re
 static int useAccel = 1; // we will set this to 0 if we can't find accel
 static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-#define NUMPIXELS 130  // For Bike Whips
+#define NUMPIXELS 140  // For Bike Whips
+const int ledUpdateScaler = 9; 
 
 
 //// Pyramids
 //// Define variables and constants
-//const int lessLight = 2;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+//const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 //const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 //static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 //static int useAccel = 0; // we will set this to 0 if we can't find accel
 //static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 //static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
 //#define NUMPIXELS 300  // For Pyramids
-
+//const int ledUpdateScaler = 7;
 
 
 //// FOR FENCE
@@ -127,7 +128,7 @@ static int useAnalog = 0; // we will set this to 0 if we don't want to look at t
 //static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 //static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
 //#define NUMPIXELS 900  // For Fence
-//// Reminder: Lower sutro's delay from 20 to 10 , decrease Fire's cooling from 20 to to 5-0
+//const int ledUpdateScaler = 4;
 
 
 //// FOR CONTROLLER
@@ -138,7 +139,8 @@ static int useAnalog = 0; // we will set this to 0 if we don't want to look at t
 //static int useAccel = 0; // we will set this to 0 if we can't find accel
 //static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 //static int useAnalog = 1; // we will set this to 0 if we don't want to look at the analog input for overrides
-//#define NUMPIXELS 130  // For Controller
+//const int ledUpdateScaler = 9;
+//#define NUMPIXELS 140  // For Controller
 
 //// DMA example for reference... however this blocks RF receive for some reason
 //#include <Adafruit_NeoPixel_ZeroDMA.h>
@@ -621,13 +623,13 @@ uint32_t meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteo
     
     // initialize or reset the initial meteor position
     if(g_LedProgramState == 0){
-        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/4);
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
         g_LedProgramState++;
     }
     
     // reset the meteor position after it shoots through
     if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
-        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/4);
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
     }
     
     
@@ -766,8 +768,8 @@ void Fire(int Cooling, int Sparking) {
     
     // Step 1.  Cool down every cell a little
     for( int i = 0; i < strip.numPixels(); i++) {
-        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + 2);
-        
+//        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + 2);
+        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + .222 * ledUpdateScaler );        
         if(cooldown>heat[i]) {
             heat[i]=0;
         } else {
@@ -958,7 +960,7 @@ int ReadAccel() {
         Serial.print("X:  "); Serial.print(abs(lis.x));
         Serial.print("  \tY:  "); Serial.print(abs(lis.y));
         Serial.print("  \tZ:  "); Serial.print(abs(lis.z));
-        
+
         if (testMode >= 3) {
             /* Or....get a new sensor event, normalized */
             sensors_event_t event;
@@ -1035,7 +1037,7 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
-    const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
+    const unsigned long MovementThreshold = 18000; // Movement is normallized such that sitting on a table ~7600-9200
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 3*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
@@ -1296,15 +1298,15 @@ void loop() {
                 }
                 // fall through to use 0 as default
             case 0: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 colorWipe (0, 150, 0);
                 break;
             case 1: // green color wipe
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 colorWipe (150, 0, 0);
                 break;
             case 2: // blue color wipe
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 colorWipe (0, 0, 150);
                 break;
             case 3: // purple color wipe
@@ -1312,7 +1314,7 @@ void loop() {
                 colorWipe (0, 75, 75);
                 break;
             case 4: // rainbow
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 rainbow(); // rainbow
                 break;
             case 5: // rainbowCycle
@@ -1352,11 +1354,11 @@ void loop() {
                 ledUpdatePeriodMs = policeChinaMode2 (10, 20, 300, true); // china Police Mode Half and Half variable:
                 break;
             case 14: // color wipe random color and back to black
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 colorWipe (Wheel(random(0,255)));
                 break;
             case 15: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
-                ledUpdatePeriodMs = 5;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 meteorRain(100,255,200, 10, 70, true);
                 break;
             case 16:  // Strobe!
@@ -1366,7 +1368,7 @@ void loop() {
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
                 ledUpdatePeriodMs = 10;
-                Fire(30,200);
+                Fire(50,200);
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
@@ -1377,7 +1379,7 @@ void loop() {
                 ledUpdatePeriodMs = Sparkle(255, 255, 255, 2, 10, 5);
                 break;
             case 20: // Sutro
-                ledUpdatePeriodMs = 20;
+                ledUpdatePeriodMs = 2 * ledUpdateScaler;
                 Sutro();
                 break;
             
