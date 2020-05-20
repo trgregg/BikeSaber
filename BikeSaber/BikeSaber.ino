@@ -97,13 +97,13 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // BIKE LIGHTS
 // Define variables and constants
-const int lessLight = 1;  // use this for longer strings. It will add this number to the LED to skip to limit power.
+const int lessLight = 0;  // use this for longer strings. It will add this number to the LED to skip to limit power.
 const int testMode = 0;     // If testing with just one BikeSaber, use this mode which: moves to the next program sequentially
 static int transmitMode = 1;  // use this for BikeSabers that we only want to recieve, but not vote.
 static int useAccel = 1; // we will set this to 0 if we can't find accel
 static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-#define NUMPIXELS 140  // For Bike Whips
+#define NUMPIXELS 110  // For Bike Whips
 const int ledUpdateScaler = 9; 
 
 
@@ -528,7 +528,7 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
 void rainbow() {
     // set each LED to an increment color from wheel; this makes a rainbow
     for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
-        if ( lessLight > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight;}   //turn off every other pixel
+        if ( lessLight +1 > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight+1;}   //turn off every other pixel
         strip.setPixelColor(i, Wheel((i+g_LedProgramColor) & 255));
     }
     
@@ -710,8 +710,8 @@ uint32_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay
 void Sutro(){
     // use g_LedProgramCurrentPixel for current position tracking
     
-    const uint32_t RedColor = strip.Color(0, 200, 0);
-    const uint32_t WhiteColor = strip.Color(150, 100, 200);
+    const uint32_t RedColor = strip.Color(0, 150, 0);
+    const uint32_t WhiteColor = strip.Color(100, 75, 150);
     g_LedProgramCurrentPixel++;
     
     if (g_LedProgramCurrentPixel > strip.numPixels()) g_LedProgramCurrentPixel = 1;
@@ -912,6 +912,56 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
     return delayForNextUpdateMs;
 }
 
+//################
+//  SparkleFlag(255, 255, 255, 0, 10);
+/***********************************************************************/
+// SparkleFlag
+// turn on several groups of pixels and then turn everything off
+/***********************************************************************/
+uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
+    
+    // use g_LedProgramState for on/off state tracking
+    uint32_t delayForNextUpdateMs = sparkleDelay;
+    const uint32_t sparkleColor = strip.Color(red, green, blue);
+    
+    switch(g_LedProgramState){
+        default:
+            strip.clear();
+            g_LedProgramState = 0;
+            // fall through
+        case 0: // on
+            // turn on several groups of pixels
+            for (int i = 0; i < sparksPerFlash; i++) {  // Draw the number of sparkles we want
+                int Pixel = (int)random(strip.numPixels());   // Pick a random place on the string to start the sparkle
+                for (int j = 0; j < (strip.numPixels() *.02); j++ ) {  // Fill in about 2% of the string for each sparkle
+                    setPixel(Pixel-j,red,green,blue);
+                }
+            }
+
+            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in top 10% of the string for a flag
+              setPixel(strip.numPixels()-j,0,50,100);
+            }
+            
+            strip.show();
+            delayForNextUpdateMs = sparkleDelay;
+            g_LedProgramState++;
+            break;
+        case 1:
+            strip.clear();
+            
+            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in top 10% of the string for a flag
+              setPixel(strip.numPixels()-j,0,50,100);
+            }
+            
+            strip.show();
+            delayForNextUpdateMs = endPause;
+            g_LedProgramState = 0;
+    }
+    
+    return delayForNextUpdateMs;
+}
+
+
 /***********************************************************************/
 // ToF Wipe
 // Use the input from the ToF sensor to control a glowing ball
@@ -1027,7 +1077,7 @@ void loop() {
     static bool isLEDOn = false;
 
     // Logging control
-    uint8_t logToSerial = 0;
+    uint8_t logToSerial = 1;
     
     // timer statics for measuring time since last action
     static unsigned long previousLedUpdateMillis = 0;
@@ -1037,7 +1087,7 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
-    const unsigned long MovementThreshold = 18000; // Movement is normallized such that sitting on a table ~7600-9200
+    const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 3*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
@@ -1051,7 +1101,7 @@ void loop() {
 
     // Broadcast timing
     const unsigned long transmitPeriodMs = 250; // how long to wait between broadcasts in ms
-    const int minRssiThreshold = -80;  // recieve threshold
+    const int minRssiThreshold = -99;  // recieve threshold
     const unsigned long overrideCoastMs = 5000;
     static int timeSinceGlobalOverride = 0;
     
@@ -1099,7 +1149,7 @@ void loop() {
             
             // get the current accel data
             int accelMagnitude = ReadAccel();
-            
+            // Serial.print(" ReadAccel: "); Serial.print(accelMagnitude); Serial.println();
             // If the accel data is valid and we have significant movement, time how long we haven't been moving
             if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
                 notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
@@ -1367,8 +1417,12 @@ void loop() {
                 ledUpdatePeriodMs = Strobe(150,100,200, 10, 25, 500);
                 break;
             case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-                ledUpdatePeriodMs = 10;
-                Fire(50,200);
+//                ledUpdatePeriodMs = 10;
+//                Fire(50,200);
+//                break;
+                // Sutro
+                ledUpdatePeriodMs = 4 * ledUpdateScaler;
+                Sutro();
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
@@ -1386,8 +1440,9 @@ void loop() {
             // These programs are left out of the numLedPrograms so they are only used for overrides
             // Sparkle slow is used for when there is no motion
             case 21: // Sparkle slow
+                // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = Sparkle(100, 150, 150, 1, 10, 250);
+                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 10, 250);
                 break;
             case 22: // SparkleDecay
                 // variable update rate based on state of the program (int red, int green, int blue, int fadeDelay, int endPause) {
