@@ -89,11 +89,7 @@ static int transmitMode = 1;  // use this for BikeSabers that we only want to re
 static int useAccel = 1; // we will set this to 0 if we can't find accel
 static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-<<<<<<< Updated upstream
-#define NUMPIXELS 110  // For Bike Whips
-=======
-#define NUMPIXELS 110 //110  // For Bike Whips
->>>>>>> Stashed changes
+#define NUMPIXELS 100  // For Bike Whips
 const int ledUpdateScaler = 9; 
 
 
@@ -418,7 +414,7 @@ uint32_t policeMode() {
             g_LedProgramState++;
             for(int i=0; i < (strip.numPixels()); i++){
                 if ( lessLight > 0 ) { i=i+lessLight;}   //turn off every other pixel
-                strip.setPixelColor(i, strip.Color(0, 150, 0));
+                strip.setPixelColor(i, strip.Color(0, 200, 0));
             }
             strip.show();
             delayForNextUpdateMs = 100;
@@ -432,7 +428,7 @@ uint32_t policeMode() {
             g_LedProgramState++;
             for(int i=0; i < (strip.numPixels()); i++){
                 if ( lessLight > 0 ) { i=i+lessLight;}   //turn off every other pixel
-                strip.setPixelColor(i, strip.Color(0, 0, 200));
+                strip.setPixelColor(i, strip.Color(0, 0, 255));
             }
             strip.show();
             delayForNextUpdateMs = 100;
@@ -541,11 +537,7 @@ uint32_t policeChinaMode2(int strobeCount, int flashDelay, int endPause, bool ha
 void rainbow() {
     // set each LED to an increment color from wheel; this makes a rainbow
     for(uint16_t i=0; i<strip.numPixels(); i=i+1) {
-<<<<<<< Updated upstream
         if ( lessLight +1 > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight+1;}   //turn off every other pixel
-=======
-        if ( lessLight +1 > 0 ) { strip.setPixelColor(i, 0); i=i+lessLight;}   //turn off every other pixel
->>>>>>> Stashed changes
         strip.setPixelColor(i, Wheel((i+g_LedProgramColor) & 255));
     }
     
@@ -921,7 +913,7 @@ void Sutro(){
 }
 
 /***********************************************************************/
-// Fire
+// Fire from the first pixel
 // make it burn!
 /***********************************************************************/
 // Helper to make fire colors
@@ -948,7 +940,7 @@ void Fire(int Cooling, int Sparking) {
     int cooldown;
     
     // Step 1.  Cool down every cell a little
-    for( int i = 0; i < strip.numPixels(); i++) {
+    for( int i = 0 ; i < strip.numPixels(); i++) {
 //        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + 2);
         cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + .222 * ledUpdateScaler );        
         if(cooldown>heat[i]) {
@@ -972,6 +964,46 @@ void Fire(int Cooling, int Sparking) {
     
     // Step 4.  Convert heat to LED colors
     for( int j = 0; j < strip.numPixels(); j++) {
+        j= j+lessLight;
+        setPixelHeatColor(j, heat[j] );
+    }
+    
+    strip.show();
+}
+
+/***********************************************************************/
+// Fire from the last pixel
+// make it burn!
+/***********************************************************************/
+void FireUp(int Cooling, int Sparking) {
+    static byte heat[NUMPIXELS];
+    int cooldown;
+    
+    // Step 1.  Cool down every cell a little
+    for( int i = strip.numPixels(); i > 0; i--) {
+//        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + 2);
+        cooldown = (int)random(0, ((Cooling * 10) / strip.numPixels()) + .222 * ledUpdateScaler );        
+        if(cooldown>heat[i]) {
+            heat[i]=0;
+        } else {
+            heat[i]=heat[i]-cooldown;
+        }
+    }
+    
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for( int k= 0; k <= strip.numPixels() ; k++) {
+        heat[k] = (heat[k + 1] + heat[k + 2] + heat[k + 2]) / 3;
+    }
+    
+    // Step 3.  Randomly ignite new 'sparks' near the bottom
+    if( random(255) < Sparking ) {
+        int y = (int)random(7);
+        heat[y] = heat[y] + random(0,95);
+        //heat[y] = random(160,255);
+    }
+    
+    // Step 4.  Convert heat to LED colors
+    for( int j = strip.numPixels(); j > 0; j--) {
         j= j+lessLight;
         setPixelHeatColor(j, heat[j] );
     }
@@ -1114,9 +1146,6 @@ uint32_t Sparkle(byte red, byte green, byte blue, int sparksPerFlash, int sparkl
     return delayForNextUpdateMs;
 }
 
-//################
-<<<<<<< Updated upstream
-=======
 //  SparkleRainbow(colorSeed, 0, 10);
 /***********************************************************************/
 // Sparkle
@@ -1156,8 +1185,8 @@ uint32_t SparkleRainbow(int32_t colorSeed, int sparksPerFlash, int sparkleDelay,
     return delayForNextUpdateMs;
 }
 
+
 //################
->>>>>>> Stashed changes
 //  SparkleFlag(255, 255, 255, 0, 10);
 /***********************************************************************/
 // SparkleFlag
@@ -1183,8 +1212,12 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
                 }
             }
 
-            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(strip.numPixels()-j,0,50,100);
+            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
+              setPixel(strip.numPixels()-j,0,200,0);
+            }
+              
+            for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
+              setPixel(j,0,50,100);
             }
             
             strip.show();
@@ -1193,9 +1226,12 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
             break;
         case 1:
             strip.clear();
-            
-            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(strip.numPixels()-j,0,50,100);
+            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
+              setPixel(strip.numPixels()-j,0,150,0);
+            }
+                        
+            for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
+              setPixel(j,0,50,100);
             }
             
             strip.show();
@@ -1332,11 +1368,7 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
-<<<<<<< Updated upstream
-    const unsigned long MovementThreshold = 12000; // Movement is normallized such that sitting on a table ~7600-9200
-=======
-    const unsigned long MovementThreshold = 11000; // Movement is normallized such that sitting on a table ~7600-9200
->>>>>>> Stashed changes
+    const unsigned long MovementThreshold = 12500; // Movement is normallized such that sitting on a table ~7600-9200
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 30*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
@@ -1365,8 +1397,8 @@ void loop() {
     static int8_t requestedRemoteGlobalOverride = 0; // If we recieve an override from a different unit
     static uint8_t localOverrideProgram = 0; // This local overriding the program, like when we aren't moving, will NOT be broadcast. Other units will not sync to it.
     
-    const uint8_t defaultLedProgram = 5;
-    static uint8_t overrideProgram = 21; // For testing specific paterns.
+    const uint8_t defaultLedProgram = 19;
+    static uint8_t overrideProgram = 0; // For testing specific paterns.
     
     static uint8_t ledProgram = defaultLedProgram;
     static uint8_t previuosLedProgram = defaultLedProgram;
@@ -1618,7 +1650,7 @@ void loop() {
                 break;
             case 5: // MORE Sparkle Rainbow (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleRainbow(currentProgramPrioity, 6, 50, 30);
+                ledUpdatePeriodMs = SparkleRainbow(currentProgramPrioity, 10, 30, 30);
                 break;
             case 6: // color chase
                 ledUpdatePeriodMs = 50;
@@ -1641,87 +1673,59 @@ void loop() {
                 // params: byte red, byte green, byte blue, int strobeCount, int flashDelay, int endPause
                 ledUpdatePeriodMs = Strobe(150,100,200, 10, 25, 500);
                 break;
-<<<<<<< Updated upstream
-            case 17: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-//                ledUpdatePeriodMs = 10;
-//                Fire(50,200);
-//                break;
-                // Sutro
-                ledUpdatePeriodMs = 4 * ledUpdateScaler;
-                Sutro();
+                
+            case 11: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
+                ledUpdatePeriodMs = 10;
+                Fire(50,200);
                 break;
-            case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
+               
+            case 12:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
                 RunningLights(0,150,150);
-=======
-            case 11:
+                
+            case 13:
                 ledUpdatePeriodMs = StrobeRainbow(currentProgramPrioity, 10, 25, 500);
->>>>>>> Stashed changes
                 break;
-            case 12: // Sparkle (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
-                // variable update rate based on state of the program
-                ledUpdatePeriodMs = Sparkle(255, 255, 255, 2, 10, 5);
-                break;
-            case 13: // Sutro
+
+            case 14: // Sutro
                 ledUpdatePeriodMs = 2 * ledUpdateScaler;
                 Sutro();
                 break;
-<<<<<<< Updated upstream
-            
-            // These programs are left out of the numLedPrograms so they are only used for overrides
-            // Sparkle slow is used for when there is no motion
-            case 21: // Sparkle slow
-                // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
-                // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 10, 250);
-=======
-
-            case 14: // red color wipe  variables: byte red, byte green, byte blue, wait before adding each LED
-                ledUpdatePeriodMs = 1 * ledUpdateScaler;
-                colorWipe (0, 150, 0);
->>>>>>> Stashed changes
-                break;
+                
             case 15: // purple color wipe
                 ledUpdatePeriodMs = 10;
                 colorWipe (0, 75, 75);
                 break;
-            case 16: // blue color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(0, 0, 255));
-                break;
-            case 17: // green color chase
-                ledUpdatePeriodMs = 50;
-                theaterChase(strip.Color(255, 0, 0));
-                break;
-            case 18: // MORE Sparkle (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
+ 
+            case 16: // MORE Sparkle (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = Sparkle(255, 255, 255, 4, 10, 5);
+                ledUpdatePeriodMs = Sparkle(255, 255, 255, 10, 30, 30);
                 break;
-            case 19: // china poice mode Half of the strip
+            case 17: // china poice mode Half of the strip
                 // int StrobeCount, int FlashDelay, int EndPause, bool halfString
                 ledUpdatePeriodMs = policeChinaMode2 (15, 25, 300, true); // china Police Mode Half and Half variable:
                 break;
-            case 20:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
+            case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
                 ledUpdatePeriodMs = 10;
                 RunningLights(0,150,150);
                 break;
-            case 21:  // Running lights variables: currentProgramPrioity used to get a sync rotating color
+            case 19:  // RainbowStick variables: currentProgramPrioity used to get a sync rotating color
                 ledUpdatePeriodMs = 10;
                 RainbowStick(currentProgramPrioity);
                 break;
-            case 22:  // Running lights variables: currentProgramPrioity used to get a sync rotating color
+            case 20:  // RainbowFill variables: currentProgramPrioity used to get a sync rotating color
                 ledUpdatePeriodMs = 10;
                 rainbowFill(currentProgramPrioity);
                 break;
                 
 // These programs are left out of the numLedPrograms so they are only used for overrides
 // Sparkle slow is used for when there is no motion
-            case 23: // Sparkle with Flag slow
+            case 21: // Sparkle with Flag slow
                 // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 10, 250);
+                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 30, 250);
                 break;
-            case 24: // SparkleDecay
+            case 22: // SparkleDecay
                 // variable update rate based on state of the program (int red, int green, int blue, int fadeDelay, int endPause) {
                 ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 2, 0);
                 break;
