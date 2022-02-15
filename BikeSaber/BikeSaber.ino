@@ -648,126 +648,46 @@ void theaterChaseRainbow() {
 }
 
 
-/***********************************************************************/
-// Meteor rain
-// make it rain glowing rocks
-/***********************************************************************/
-//void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
-//    // use g_LedProgramCurrentPixel for meteor position
-//    // use g_LedProgramState for initialization flag
-//    
-//    // initialize or reset the initial meteor position
-//    if(g_LedProgramState == 0){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//        g_LedProgramState++;
-//    }
-//    
-//    // reset the meteor position after it shoots through
-//    if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//    }
-//    
-//    
-//    // fade brightness all LEDs one step
-//    for(int j=0; j< strip.numPixels(); j++) {
-//        if( (!meteorRandomDecay) || (random(10)>5) ) {
-//            fadeToBlack(j, meteorTrailDecay );
-//        }
-//    }
-//    
-//    // draw meteor
-//    for(int j = 0; j < meteorSize; j++) {
-//        if( ( g_LedProgramCurrentPixel - j < strip.numPixels() ) && ( g_LedProgramCurrentPixel - j >= 0 ) ) {
-//            strip.setPixelColor(g_LedProgramCurrentPixel - j, red, green, blue);
-//        }
-//    }
-//    
-//    strip.show();
-//    g_LedProgramCurrentPixel--;
-//    
-//}
-//
 ///***********************************************************************/
-//// Meteor rainBow
-//// make it rain glowing rocks
-///***********************************************************************/
-//uint32_t meteorRainbow(int32_t colorSeed, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
-//    // use g_LedProgramCurrentPixel for meteor position
-//    // use g_LedProgramState for initialization flag
-//    
-//    // initialize or reset the initial meteor position
-//    if(g_LedProgramState == 0){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//        g_LedProgramState++;
-//        g_LedProgramColor = Wheel((colorSeed) & 255); // change color on every pixel using the current priority (counting down) to determine the color
-//    }
-//    
-//    // reset the meteor position after it shoots through
-//    if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//        g_LedProgramColor = Wheel((colorSeed) & 255); // change color on every pixel using the current priority (counting down) to determine the color
-//    }
-//    
-//    
-//    // fade brightness all LEDs one step
-//    for(int j=0; j< strip.numPixels(); j++) {
-//        if( (!meteorRandomDecay) || (random(10)>5) ) {
-//            fadeToBlack(j, meteorTrailDecay );
-//        }
-//    }
-//    
-//    // draw meteor
-//    for(int j = 0; j < meteorSize; j++) {
-//        if( ( g_LedProgramCurrentPixel - j < strip.numPixels() ) && ( g_LedProgramCurrentPixel - j >= 0 ) ) {
-//            strip.setPixelColor(g_LedProgramCurrentPixel - j, g_LedProgramColor);
-//        }
-//    }
-//    
-//    strip.show();
-//    g_LedProgramCurrentPixel--;
-//    
-//}
-
-
-/***********************************************************************/
 // Meteor rainBow
 // make it rain glowing rocks
 /***********************************************************************/
-//uint32_t meteorRainbow2(int32_t colorSeed, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
-//    // use g_LedProgramCurrentPixel for meteor position
-//    // use g_LedProgramState for initialization flag
-//    
-//    // initialize or reset the initial meteor position
-//    if(g_LedProgramState == 0){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//        g_LedProgramState++;
-//    }
-//    
-//    // reset the meteor position after it shoots through
-//    if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
-//        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
-//    }
-//    
-//    
-//    // fade brightness all LEDs one step
-//    for(int j=0; j< strip.numPixels(); j++) {
-//        if( (!meteorRandomDecay) || (random(10)>5) ) {
-//            fadeToBlack(j, meteorTrailDecay );
-//        }
-//    }
-//    
-//    // draw meteor
-//    for(int j = 0; j < meteorSize; j++) {
-//        if( ( g_LedProgramCurrentPixel - j < strip.numPixels() ) && ( g_LedProgramCurrentPixel - j >= 0 ) ) {
-//            g_LedProgramColor = Wheel((colorSeed/2) & 255); // change color on every pixel using the current priority (counting down) to determine the color
-//            strip.setPixelColor(g_LedProgramCurrentPixel - j, g_LedProgramColor);
-//        }
-//    }
-//    
-//    strip.show();
-//    g_LedProgramCurrentPixel--;
-//    
-//}
+void meteorRainbow(int32_t colorSeed, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay) {
+    // use g_LedProgramCurrentPixel for meteor position
+    // use g_LedProgramState for initialization flag
+    
+    // initialize or reset the initial meteor position
+    if(g_LedProgramState == 0){
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
+        g_LedProgramState++;
+        g_LedProgramColor = Wheel((colorSeed) & 255); // change color on every pixel using the current priority (counting down) to determine the color
+    }
+    
+    // reset the meteor position after it shoots through
+    if(g_LedProgramCurrentPixel <= (0 - meteorSize - meteorTrailDecay)){
+        g_LedProgramCurrentPixel = strip.numPixels() + (strip.numPixels()/8);
+        g_LedProgramColor = Wheel((colorSeed) & 255); // change color on every pixel using the current priority (counting down) to determine the color
+    }
+    
+    
+    // fade brightness all LEDs one step
+    for(int j=0; j< strip.numPixels(); j++) {
+        if( (!meteorRandomDecay) || (random(10)>5) ) {
+            fadeToBlack(j, meteorTrailDecay );
+        }
+    }
+    
+    // draw meteor
+    for(int j = 0; j < meteorSize; j++) {
+        if( ( g_LedProgramCurrentPixel - j < strip.numPixels() ) && ( g_LedProgramCurrentPixel - j >= 0 ) ) {
+            strip.setPixelColor(g_LedProgramCurrentPixel - j, g_LedProgramColor);
+        }
+    }
+    
+    strip.show();
+    g_LedProgramCurrentPixel--;
+
+}
 
 
 /***********************************************************************/
@@ -1372,7 +1292,7 @@ void loop() {
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
     const unsigned long notMovingTimeout = 30*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
-    const int StillProgram = 21; // pick a program to run when we are still
+    const int StillProgram = 22; // pick a program to run when we are still
 
     // Time of Flight settings
     const int ToFProgram = 24; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
@@ -1391,7 +1311,7 @@ void loop() {
     const unsigned long priorityDecrementPeriodMs = 1;  // decrement the priority every X milliseconds
     const unsigned long minimumProgramTimeMs = 10000;  // How long to run a program after switching programs
     
-    const uint8_t numLedPrograms = 20; // max case id, not count
+    const uint8_t numLedPrograms = 21; // max case id, not count
 
     static uint8_t globalOverrideProgram = 0; // If something is overriding the program, like a sensor, this program will also be broadcast so other units sync to it
     static int8_t requestedRemoteGlobalOverride = 0; // If we recieve an override from a different unit
@@ -1717,15 +1637,19 @@ void loop() {
                 ledUpdatePeriodMs = 10;
                 rainbowFill(currentProgramPrioity);
                 break;
+            case 21: // meteorRainbow variables: colorSeed,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
+                meteorRainbow(currentProgramPrioity, 15, 70, true);
+                break;
                 
 // These programs are left out of the numLedPrograms so they are only used for overrides
 // Sparkle slow is used for when there is no motion
-            case 21: // Sparkle with Flag slow
+            case 22: // Sparkle with Flag slow
                 // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
                 // variable update rate based on state of the program
                 ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 30, 250);
                 break;
-            case 22: // SparkleDecay
+            case 23: // SparkleDecay
                 // variable update rate based on state of the program (int red, int green, int blue, int fadeDelay, int endPause) {
                 ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 2, 0);
                 break;
