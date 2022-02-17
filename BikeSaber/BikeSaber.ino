@@ -89,8 +89,12 @@ static int transmitMode = 1;  // use this for BikeSabers that we only want to re
 static int useAccel = 1; // we will set this to 0 if we can't find accel
 static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
-#define NUMPIXELS 100  // For Bike Whips
-const int ledUpdateScaler = 9; 
+
+//#define NUMPIXELS 100  // For Bike Whips
+//const int ledUpdateScaler = 10; // For Bike Whips
+
+#define NUMPIXELS 55  // For Kids Bike Whips
+const int ledUpdateScaler = 16; 
 
 
 // Prototypes
@@ -952,9 +956,9 @@ void RunningLights(byte red, byte green, byte blue) {
 }
 
 /***********************************************************************/
-// RainbowStick: Fill the entire strip with one color, rotate
+// RainbowFill: Fill the entire strip with one color, rotate
 /***********************************************************************/
-void RainbowStick(int32_t colorSeed) {
+void RainbowFill(int32_t colorSeed) {
     uint32_t stripColor = g_LedProgramColor;
     g_LedProgramColor = Wheel((colorSeed/5) & 255); // change color on every pixel using the current priority (counting down) to determine the color
     strip.fill(g_LedProgramColor, 0, NUMPIXELS);
@@ -962,9 +966,9 @@ void RainbowStick(int32_t colorSeed) {
 }
 
 /***********************************************************************/
-// RainbowFill: Rainbow the strip with one color, move 
+// RainbowStick: Rainbow the strip with one color, move 
 /***********************************************************************/
-void rainbowFill(int32_t colorSeed) {
+void RainbowStick(int32_t colorSeed) {
     g_LedProgramCurrentPixel++;
     g_LedProgramColor = Wheel((colorSeed/5) & 255); // change color on every pixel using the current priority (counting down) to determine the color
 //  strip.rainbow(first_hue, reps, saturation, brightness, bool gammify);
@@ -1133,11 +1137,11 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
             }
 
             for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
-              setPixel(strip.numPixels()-j,0,200,0);
+              setPixel(j,0,200,0);
             }
               
             for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(j,0,50,100);
+              setPixel(strip.numPixels()-j,0,50,100);
             }
             
             strip.show();
@@ -1147,11 +1151,11 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
         case 1:
             strip.clear();
             for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
-              setPixel(strip.numPixels()-j,0,150,0);
+              setPixel(j,0,150,0);
             }
                         
             for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(j,0,50,100);
+              setPixel(strip.numPixels()-j,0,50,100);
             }
             
             strip.show();
@@ -1206,29 +1210,35 @@ void ToFColor(int range) {
 /***********************************************************************/
 int ReadAccel() {
     lis.read();      // get X Y and Z data at once
+    sensors_event_t event;   /* Or....get a new sensor event, normalized */
+    lis.getEvent(&event);
     // Then print out the raw data
     if (testMode >= 2) {
-        Serial.print("X:  "); Serial.print(abs(lis.x));
-        Serial.print("  \tY:  "); Serial.print(abs(lis.y));
-        Serial.print("  \tZ:  "); Serial.print(abs(lis.z));
+        Serial.print("Xr:  "); Serial.print(abs(lis.x));
+        Serial.print("  \tYr:  "); Serial.print(abs(lis.y));
+        Serial.print("  \tZr:  "); Serial.println(abs(lis.z));
 
         if (testMode >= 3) {
-            /* Or....get a new sensor event, normalized */
             sensors_event_t event;
             lis.getEvent(&event);
             
             /* Display the results (acceleration is measured in m/s^2) */
-            Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
-            Serial.print(" \tY: "); Serial.print(event.acceleration.y);
-            Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
-            Serial.print(" m/s^2 ");
+            Serial.print("Xa: "); Serial.print(event.acceleration.x);
+            Serial.print(" \tYa: "); Serial.print(event.acceleration.y);
+            Serial.print(" \tZa: "); Serial.print(event.acceleration.z);
+            Serial.println(" m/s^2 ");
         }
         
         Serial.println();
     }
     int accelMagnitude = (abs(lis.x) + abs(lis.y) + abs(lis.z));  // normallize the movement such that sitting on a table is ~7600.
-    
-    return accelMagnitude;
+    int accelMagnitude2 = (abs(event.acceleration.x) + abs(event.acceleration.y) + abs(event.acceleration.z));  // normallize the movement such that sitting on a table is ~7600.
+    if (testMode >= 1) {
+      Serial.println(accelMagnitude);
+      Serial.println(accelMagnitude2);
+    }
+
+    return accelMagnitude2;
     
 }
 
@@ -1288,9 +1298,10 @@ void loop() {
 
     // timer statics for checking Accel
     static unsigned long previousAccelCheckMillis = millis();
-    const unsigned long MovementThreshold = 12500; // Movement is normallized such that sitting on a table ~7600-9200
+//    const unsigned long MovementThreshold = 13000; // Movement is normallized such that sitting on a table ~7600-12000
+    const unsigned long MovementThreshold = 15; // Acceleration in m/s^2, so should be normallized such that sitting on a table ~9.8, int to 10, account for some error and set to 15
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 30*60*1000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 10*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
     const int StillProgram = 22; // pick a program to run when we are still
 
@@ -1317,7 +1328,7 @@ void loop() {
     static int8_t requestedRemoteGlobalOverride = 0; // If we recieve an override from a different unit
     static uint8_t localOverrideProgram = 0; // This local overriding the program, like when we aren't moving, will NOT be broadcast. Other units will not sync to it.
     
-    const uint8_t defaultLedProgram = 19;
+    const uint8_t defaultLedProgram = 0;
     static uint8_t overrideProgram = 0; // For testing specific paterns.
     
     static uint8_t ledProgram = defaultLedProgram;
@@ -1561,11 +1572,11 @@ void loop() {
                 rainbow(); // rainbow
                 break;
             case 3: // rainbowCycle
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 10 ;
                 rainbowCycle();
                 break;
             case 4: // random color chase
-                ledUpdatePeriodMs = 50;
+                ledUpdatePeriodMs = 50 ;
                 theaterChaseRandom(currentProgramPrioity);
                 break;
             case 5: // MORE Sparkle Rainbow (byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) 
@@ -1573,7 +1584,7 @@ void loop() {
                 ledUpdatePeriodMs = SparkleRainbow(currentProgramPrioity, 10, 30, 30);
                 break;
             case 6: // color chase
-                ledUpdatePeriodMs = 50;
+                ledUpdatePeriodMs = 50 ;
                 theaterChaseRainbow();
                 break;
             case 7: // police mode
@@ -1595,14 +1606,14 @@ void loop() {
                 break;
                 
             case 11: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 10 ;
                 Fire(50,200);
                 break;
                
             case 12:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 RunningLights(0,150,150);
-                
+                break;
             case 13:
                 ledUpdatePeriodMs = StrobeRainbow(currentProgramPrioity, 10, 25, 500);
                 break;
@@ -1613,7 +1624,7 @@ void loop() {
                 break;
                 
             case 15: // purple color wipe
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler;
                 colorWipe (0, 75, 75);
                 break;
  
@@ -1626,19 +1637,19 @@ void loop() {
                 ledUpdatePeriodMs = policeChinaMode2 (15, 25, 300, true); // china Police Mode Half and Half variable:
                 break;
             case 18:  // Running lights variables: byte red, byte green, byte blue, int WaveDelay
-                ledUpdatePeriodMs = 10;
+                ledUpdatePeriodMs = 10 + ledUpdateScaler;
                 RunningLights(0,150,150);
                 break;
-            case 19:  // RainbowStick variables: currentProgramPrioity used to get a sync rotating color
-                ledUpdatePeriodMs = 10;
+            case 19:  // RainbowStick puts a rainbow on the stick and wiggles it variables: currentProgramPrioity used to get a sync rotating color
+                ledUpdatePeriodMs = 10 ;
                 RainbowStick(currentProgramPrioity);
                 break;
-            case 20:  // RainbowFill variables: currentProgramPrioity used to get a sync rotating color
-                ledUpdatePeriodMs = 10;
-                rainbowFill(currentProgramPrioity);
+            case 20:  // RainbowFill Fills the entire stick with one color, then changes the color variables: currentProgramPrioity used to get a sync rotating color
+                ledUpdatePeriodMs = 10 ;
+                RainbowFill(currentProgramPrioity);
                 break;
             case 21: // meteorRainbow variables: colorSeed,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
-                ledUpdatePeriodMs = 1 * ledUpdateScaler;
+                ledUpdatePeriodMs = 1 * ledUpdateScaler ;
                 meteorRainbow(currentProgramPrioity, 15, 70, true);
                 break;
                 
