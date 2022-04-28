@@ -90,11 +90,14 @@ static int useAccel = 1; // we will set this to 0 if we can't find accel
 static int useToF = 0; // we will set this to 0 if we can't find Time of Flight sensor 
 static int useAnalog = 0; // we will set this to 0 if we don't want to look at the analog input for overrides
 
-//#define NUMPIXELS 100  // For Bike Whips
-//const int ledUpdateScaler = 10; // For Bike Whips
+//#define NUMPIXELS 100  // For Spiral Bike Whips
+//const int ledUpdateScaler = 9; // For Bike Whips
 
-#define NUMPIXELS 55  // For Kids Bike Whips
-const int ledUpdateScaler = 16; 
+#define NUMPIXELS 90  // For Neon Bike Whips
+const int ledUpdateScaler = 11; // For Neon Bike Whips
+
+//#define NUMPIXELS 55  // For Kids Bike Whips
+//const int ledUpdateScaler = 16; 
 
 
 // Prototypes
@@ -334,7 +337,7 @@ void colorWipe(uint32_t c) {
     
     // if we've filled the strip, flip on/off and refill
     // add a few pixels over the strip length to make it stay lit/off for a bit
-    if(g_LedProgramCurrentPixel >= strip.numPixels()+25){
+    if(g_LedProgramCurrentPixel >= ( strip.numPixels() + (strip.numPixels() * 0.25) ) ) {  // over fill by 25% so we stay full on/off for some time.
         g_LedProgramState++;
         g_LedProgramCurrentPixel = 0;
     }
@@ -837,6 +840,43 @@ void Sutro(){
 }
 
 /***********************************************************************/
+// Ukraine
+/***********************************************************************/
+void Ukraine(){
+    // use g_LedProgramCurrentPixel for current position tracking
+    
+    const uint32_t BlueColor = strip.Color(0, 0, 250);
+    const uint32_t YellowColor = strip.Color(100, 125, 0);
+    g_LedProgramCurrentPixel++;
+    
+    if (g_LedProgramCurrentPixel > strip.numPixels()) g_LedProgramCurrentPixel = 1;
+    
+    strip.fill(YellowColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels() *3/4),
+               0+g_LedProgramCurrentPixel-int(strip.numPixels()/2));
+    strip.fill(BlueColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels()/2),
+               0+g_LedProgramCurrentPixel-int(strip.numPixels()/4));
+    strip.fill(YellowColor, 0+g_LedProgramCurrentPixel-int(strip.numPixels()/4),
+               0+g_LedProgramCurrentPixel);
+    strip.fill(BlueColor, 0+g_LedProgramCurrentPixel,
+               int(strip.numPixels()/4)+g_LedProgramCurrentPixel); // bottom 1/4 is red
+    strip.fill(YellowColor, int(strip.numPixels()/4)+g_LedProgramCurrentPixel,
+               int(strip.numPixels()/2)+g_LedProgramCurrentPixel); // bottom 1/4-1/2 is white
+    strip.fill(BlueColor, int(strip.numPixels()/2)+g_LedProgramCurrentPixel,
+               int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel); // top 1/2-3/4 is red
+    strip.fill(YellowColor, int(strip.numPixels() * 3/4)+g_LedProgramCurrentPixel, strip.numPixels()); // top 3/4 is white
+    if( lessLight > 0) {
+        for(int i=0; i< strip.numPixels(); i++) {
+            if ( i % (lessLight+1) != 0) {  
+          strip.setPixelColor(i, strip.Color(0, 0, 0));
+        }
+    }
+    }
+    strip.show();
+}
+
+
+
+/***********************************************************************/
 // Fire from the first pixel
 // make it burn!
 /***********************************************************************/
@@ -1116,12 +1156,13 @@ uint32_t SparkleRainbow(int32_t colorSeed, int sparksPerFlash, int sparkleDelay,
 // SparkleFlag
 // turn on several groups of pixels and then turn everything off
 /***********************************************************************/
-uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
+uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause, int32_t colorSeed) {
     
     // use g_LedProgramState for on/off state tracking
     uint32_t delayForNextUpdateMs = sparkleDelay;
     const uint32_t sparkleColor = strip.Color(red, green, blue);
-    
+    g_LedProgramColor = Wheel((colorSeed/5) & 255);
+        
     switch(g_LedProgramState){
         default:
             strip.clear();
@@ -1140,10 +1181,8 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
               setPixel(j,0,200,0);
             }
               
-            for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(strip.numPixels()-j,0,50,100);
-            }
-            
+            strip.fill(g_LedProgramColor, (strip.numPixels() *.9), strip.numPixels() ); // Fill in top 10% of the string for a flag
+        
             strip.show();
             delayForNextUpdateMs = sparkleDelay;
             g_LedProgramState++;
@@ -1154,15 +1193,13 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
               setPixel(j,0,150,0);
             }
                         
-            for (int j = 0; j < (strip.numPixels() *.1); j++ ) {  // Fill in top 10% of the string for a flag
-              setPixel(strip.numPixels()-j,0,50,100);
-            }
-            
+            strip.fill(g_LedProgramColor, (strip.numPixels() *.9), strip.numPixels() ); // Fill in top 10% of the string for a flag
+
             strip.show();
             delayForNextUpdateMs = endPause;
             g_LedProgramState = 0;
     }
-    
+
     return delayForNextUpdateMs;
 }
 
@@ -1217,22 +1254,22 @@ int ReadAccel() {
         Serial.print("Xr:  "); Serial.print(abs(lis.x));
         Serial.print("  \tYr:  "); Serial.print(abs(lis.y));
         Serial.print("  \tZr:  "); Serial.println(abs(lis.z));
-
-        if (testMode >= 3) {
-            sensors_event_t event;
-            lis.getEvent(&event);
-            
-            /* Display the results (acceleration is measured in m/s^2) */
-            Serial.print("Xa: "); Serial.print(event.acceleration.x);
-            Serial.print(" \tYa: "); Serial.print(event.acceleration.y);
-            Serial.print(" \tZa: "); Serial.print(event.acceleration.z);
-            Serial.println(" m/s^2 ");
-        }
-        
-        Serial.println();
     }
+
+    if (testMode >= 1) {
+        sensors_event_t event;
+        lis.getEvent(&event);
+        
+        /* Display the results (acceleration is measured in m/s^2) */
+        Serial.print("Xa: "); Serial.print(event.acceleration.x);
+        Serial.print(" \tYa: "); Serial.print(event.acceleration.y);
+        Serial.print(" \tZa: "); Serial.print(event.acceleration.z);
+        Serial.println(" m/s^2 ");
+    }
+       
     int accelMagnitude = (abs(lis.x) + abs(lis.y) + abs(lis.z));  // normallize the movement such that sitting on a table is ~7600.
-    int accelMagnitude2 = (abs(event.acceleration.x) + abs(event.acceleration.y) + abs(event.acceleration.z));  // normallize the movement such that sitting on a table is ~7600.
+    int accelMagnitude2 = (abs(event.acceleration.x) + abs(event.acceleration.y) + abs(event.acceleration.z));  // get the cummaltive accelleration.
+
     if (testMode >= 1) {
       Serial.println(accelMagnitude);
       Serial.println(accelMagnitude2);
@@ -1301,9 +1338,9 @@ void loop() {
 //    const unsigned long MovementThreshold = 13000; // Movement is normallized such that sitting on a table ~7600-12000
     const unsigned long MovementThreshold = 15; // Acceleration in m/s^2, so should be normallized such that sitting on a table ~9.8, int to 10, account for some error and set to 15
     const unsigned long AccelCheckPeriodMs = 50; // Update time between checking accel to see if we are moving
-    const unsigned long notMovingTimeout = 10*60*1000; // how long to wait before giong to still program in ms
+    const unsigned long notMovingTimeout = 5*60*1000; // how long to wait before giong to still program in ms
     static int notMovingTimer = 0; // timer for how many non-moving accelerometer measurements have been made
-    const int StillProgram = 22; // pick a program to run when we are still
+    const int StillProgram = 23; // pick a program to run when we are still
 
     // Time of Flight settings
     const int ToFProgram = 24; //min inclusive, max exclusive; // pick a program to run when we are overriding with ToF sensor
@@ -1322,7 +1359,7 @@ void loop() {
     const unsigned long priorityDecrementPeriodMs = 1;  // decrement the priority every X milliseconds
     const unsigned long minimumProgramTimeMs = 10000;  // How long to run a program after switching programs
     
-    const uint8_t numLedPrograms = 21; // max case id, not count
+    const uint8_t numLedPrograms = 22; // max case id, not count
 
     static uint8_t globalOverrideProgram = 0; // If something is overriding the program, like a sensor, this program will also be broadcast so other units sync to it
     static int8_t requestedRemoteGlobalOverride = 0; // If we recieve an override from a different unit
@@ -1363,7 +1400,7 @@ void loop() {
             int accelMagnitude = ReadAccel();
             // Serial.print(" ReadAccel: "); Serial.print(accelMagnitude); Serial.println();
             // If the accel data is valid and we have significant movement, time how long we haven't been moving
-            if ((accelMagnitude < MovementThreshold) && (accelMagnitude > 0)) {
+            if ((accelMagnitude <= MovementThreshold) && (accelMagnitude > 0)) {
                 notMovingTimer = (int)(notMovingTimer + (millis() - previousAccelCheckMillis));
             } else {
                 notMovingTimer = 0;  // reset the counter since we are moving again
@@ -1652,15 +1689,19 @@ void loop() {
                 ledUpdatePeriodMs = 1 * ledUpdateScaler ;
                 meteorRainbow(currentProgramPrioity, 15, 70, true);
                 break;
+            case 22: // Ukraine
+                ledUpdatePeriodMs = 2 * ledUpdateScaler;
+                Ukraine();
+                break;
                 
 // These programs are left out of the numLedPrograms so they are only used for overrides
 // Sparkle slow is used for when there is no motion
-            case 22: // Sparkle with Flag slow
-                // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause) {
+            case 23: // Sparkle with Flag slow
+                // uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sparkleDelay, int endPause, flagColor) {
                 // variable update rate based on state of the program
-                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 30, 250);
+                ledUpdatePeriodMs = SparkleFlag(200, 225, 225, 2, 30, 250, currentProgramPrioity);
                 break;
-            case 23: // SparkleDecay
+            case 24: // SparkleDecay
                 // variable update rate based on state of the program (int red, int green, int blue, int fadeDelay, int endPause) {
                 ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 2, 0);
                 break;
@@ -1671,17 +1712,17 @@ void loop() {
 //            //
 //            // Time Of Flight programs commented out for Bike Sabers where there isn't a ToF Sensor
 //            //
-//             case 24: // ToFWipe
+//             case 25: // ToFWipe
 //                // variable update rate based on state of the program
 //                ledUpdatePeriodMs = 10;
 //                ToFWipe(100,255,200, range);
 //                break;
-//            case 25: // ToFColor
+//            case 26: // ToFColor
 //                // variable update rate based on state of the program
 //                ledUpdatePeriodMs = 10;
 //                ToFColor(range);
 //                break;
-//            case 26: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
+//            case 27: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
 //                ledUpdatePeriodMs = 15;
 //                Fire((range & 255),200);
 //                break;
@@ -1874,11 +1915,12 @@ void loop() {
             }
             
             if(logToSerial == 1){
-                sprintf(buffer, "%ld %d %d %d %d: Sending %d %d %d %d; last tx: %dms (%d late)",
+                sprintf(buffer, "%ld %d %d %d %d: Sending %d %d %d %d; last tx: %dms (%d late) accel: %d",
                         millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
                         tempProgram, tempPriority, globalOverrideProgram, localRange,
                         (int)(millis() - previousTransmitMillis),
-                        (int)((millis() - previousTransmitMillis) - transmitPeriodMs)
+                        (int)((millis() - previousTransmitMillis) - transmitPeriodMs),
+                        ReadAccel()
                         );
                 Serial.println(buffer);
             }
