@@ -343,6 +343,43 @@ void colorWipe(uint32_t c) {
     }
 }
 
+void colorWipeAndFade(int red, int green, int blue) {
+     // reduce red a percentage of the number of pixels on each pixel so we reach 0 at the end
+     int redFade = red - int(red * g_LedProgramCurrentPixel / strip.numPixels() );
+     int greenFade = green - int(green * g_LedProgramCurrentPixel / strip.numPixels() );
+     int blueFade = blue - int(blue * g_LedProgramCurrentPixel / strip.numPixels() );
+
+    // use g_LedProgramState for wipe on/off state
+    switch(g_LedProgramState){
+        default:
+            g_LedProgramState = 0;
+            g_LedProgramCurrentPixel = 0;
+            // fall through
+        case 0: // wipe color on
+            strip.setPixelColor(g_LedProgramCurrentPixel, strip.Color(greenFade, redFade, blueFade));
+            strip.show();
+            break;
+        case 1: // wipe color off
+            strip.setPixelColor(g_LedProgramCurrentPixel, 0);
+            strip.show();
+            break;
+    }
+    
+    // Skip pixels if we are using long strips and want to reduce power
+    if ( lessLight > 0 ) { g_LedProgramCurrentPixel= g_LedProgramCurrentPixel + lessLight;} // Skip pixels if we want less light
+
+    // move to the next pixel
+    g_LedProgramCurrentPixel++;
+    
+    // if we've filled the strip, flip on/off and refill
+    // add a few pixels over the strip length to make it stay lit/off for a bit
+    if(g_LedProgramCurrentPixel >= ( strip.numPixels() + (strip.numPixels() * 0.25) ) ) {  // over fill by 25% so we stay full on/off for some time.
+        g_LedProgramState++;
+        g_LedProgramCurrentPixel = 0;
+    }
+}
+
+
 void colorWipeRainbow( int32_t colorSeed ) {
     // use g_LedProgramState for wipe on/off state
     switch(g_LedProgramState){
@@ -845,8 +882,8 @@ void Sutro(){
 void Ukraine(){
     // use g_LedProgramCurrentPixel for current position tracking
     
-    const uint32_t BlueColor = strip.Color(0, 0, 250);
-    const uint32_t YellowColor = strip.Color(100, 125, 0);
+    const uint32_t BlueColor = strip.Color(0, 0, 200);
+    const uint32_t YellowColor = strip.Color(75, 100, 0);
     g_LedProgramCurrentPixel++;
     
     if (g_LedProgramCurrentPixel > strip.numPixels()) g_LedProgramCurrentPixel = 1;
@@ -1177,8 +1214,8 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
                 }
             }
 
-            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
-              setPixel(j,0,200,0);
+            for (int j = 0; j < (strip.numPixels() *.15); j++ ) {  // Fill in bottom 15% of the string for a brake light
+              setPixel(j,0,50,0);
             }
               
             strip.fill(g_LedProgramColor, (strip.numPixels() *.9), strip.numPixels() ); // Fill in top 10% of the string for a flag
@@ -1189,8 +1226,8 @@ uint32_t SparkleFlag(byte red, byte green, byte blue, int sparksPerFlash, int sp
             break;
         case 1:
             strip.clear();
-            for (int j = 0; j < (strip.numPixels() *.2); j++ ) {  // Fill in bottom 20% of the string for a brake light
-              setPixel(j,0,150,0);
+            for (int j = 0; j < (strip.numPixels() *.15); j++ ) {  // Fill in bottom 15% of the string for a brake light
+              setPixel(j,0,50,0);
             }
                         
             strip.fill(g_LedProgramColor, (strip.numPixels() *.9), strip.numPixels() ); // Fill in top 10% of the string for a flag
@@ -1632,9 +1669,9 @@ void loop() {
                 // variable update rate based on state of the program
                 ledUpdatePeriodMs = policeChinaMode2(15,25,300, false); // china Police Mode variable: wait between switching colors
                 break;
-            case 9: // color wipe white
+            case 9: // color wipe whte and fade our red to reduce power
                 ledUpdatePeriodMs = 1 * ledUpdateScaler;
-                colorWipe (150, 120, 150);
+                colorWipeAndFade (150, 120, 150);
                 break;
             case 10:  // Strobe!
                 // variable update rate based on state of the program
