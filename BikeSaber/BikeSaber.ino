@@ -72,12 +72,6 @@
 // Accelerometer via I2C
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
-// Time of Flight Sensor
-//#include "Adafruit_VL6180X.h"
-//Adafruit_VL6180X vl = Adafruit_VL6180X();
-#include <Adafruit_VL53L0X.h>
-Adafruit_VL53L0X lox = Adafruit_VL53L0X();
-
 // Define structures and classes
 
 
@@ -105,7 +99,7 @@ const int ledUpdateScaler = 11; // For Neon Bike Whips
 
 
 // Setup
-// ***************************************************************************
+// ***************************************************************************a
 // Stuff for LED string
 // ***************************************************************************
 //#define NUMPIXELS 130  // For Bike Whips
@@ -220,17 +214,6 @@ void setup()
         }
     }
 
-///////// setup Time of Flight stuff
-    Serial.println("Time of Flight VL53L0X test");
-    if ( useToF == 1) {
-        if (! lox.begin(0x29)) {
-          Serial.println("Failed to find ToF. Continuing without it.");
-          useToF = 0;
-        
-        } else {
-        Serial.println("VL53L0X ToF found!");
-        }
-    }
     
 ////// Setup the NeoPixel string
     Serial.println("Adafruit NeoPixel initializing...");
@@ -754,7 +737,7 @@ uint32_t Strobe(byte red, byte green, byte blue, int strobeCount, int flashDelay
         case 1: // turn all on
             // strip.fill(strobeColor, 0, strip.numPixels());
 			for(int i=0; i < (strip.numPixels()); i++) {strip.setPixelColor(i, strobeColor); i=i+lessLight;} 
-			
+            strip.setBrightness(175);
             strip.show();
             delayForNextUpdateMs = flashDelay;
             g_LedProgramState++;
@@ -807,7 +790,7 @@ uint32_t StrobeRainbow(int32_t colorSeed, int strobeCount, int flashDelay, int e
         case 1: // turn all on
             // strip.fill(strobeColor, 0, strip.numPixels());
             for(int i=0; i < (strip.numPixels()); i++) {strip.setPixelColor(i, strobeColor); i=i+lessLight;} 
-      
+            strip.setBrightness(175);
             strip.show();
             delayForNextUpdateMs = flashDelay;
             g_LedProgramState++;
@@ -1038,18 +1021,19 @@ void RunningLights(byte red, byte green, byte blue) {
 void RainbowFill(int32_t colorSeed) {
     uint32_t stripColor = g_LedProgramColor;
     g_LedProgramColor = Wheel((colorSeed/5) & 255); // change color on every pixel using the current priority (counting down) to determine the color
+    strip.setBrightness(175);
     strip.fill(g_LedProgramColor, 0, NUMPIXELS);
     strip.show();
 }
 
 /***********************************************************************/
-// RainbowStick: Rainbow the strip with one color, move 
+// RainbowStick: Rainbow the strip, move 
 /***********************************************************************/
 void RainbowStick(int32_t colorSeed) {
     g_LedProgramCurrentPixel++;
     g_LedProgramColor = Wheel((colorSeed/5) & 255); // change color on every pixel using the current priority (counting down) to determine the color
 //  strip.rainbow(first_hue, reps, saturation, brightness, bool gammify);
-    strip.rainbow(g_LedProgramColor, 3, 255, 255, true);
+    strip.rainbow(g_LedProgramColor, 3, 255, 200, false);
     strip.show();
 
 }
@@ -1316,32 +1300,6 @@ int ReadAccel() {
     
 }
 
-/***********************************************************************/
-// Read the Time of Flight distance to override program
-/***********************************************************************/
-int ReadToF() {
-    uint8_t range = 0;  
-
-    VL53L0X_RangingMeasurementData_t measure;
-    lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
-
-    // If the ToF sensor status returns an error, such as not ready, or over range, set the ToF program to 0    
-    if (measure.RangeStatus == 4) {  // phase failures have incorrect data
-        if (testMode >= 2) {Serial.println("ToF Out of Range");}
-    } else if ( measure.RangeMilliMeter < 3000) {
-        range = measure.RangeMilliMeter;
-        
-        if (testMode >= 2) {
-            char buffer[255];
-            sprintf(buffer, "Range: %d",
-                    measure.RangeMilliMeter);
-            Serial.println((char*)buffer);
-        }
-    }
-	
-    return range;
-}
-
 
 /***********************************************************************/
 /***********************************************************************/
@@ -1461,27 +1419,7 @@ void loop() {
 
         // update accel check timestamp
         previousAccelCheckMillis = millis();
-		
- 		    // While we are here... Check the Time of Flight sensor for possible overrides
-    		if (useToF > 0) {
-      			localRange = ReadToF();
-        		
-        		if (localRange > 0) {
-                globalOverrideProgram = ToFProgram;
-                range = localRange;
-                if(logToSerial == 1){
-		        char buffer[255];
-          		        sprintf(buffer, "%ld %d %d %d %d: Time Of Flight Override Prg: %d localRange: %d",
-                              millis(), currentLedProgram, ledProgram, currentProgramPrioity, requestedProgramPrioity,
-                              globalOverrideProgram, localRange);
-                      Serial.println((char*)buffer);
-                }
-            } else { 
-              globalOverrideProgram = 0 ;
-              range = 0 ;
-            }
-    		}
-        
+		        
         // While we are here... Check for an analog input that may want to override
         if (useAnalog > 0) {            
             int analogInput1 = analogRead(ANALOG1);  // Gives a value from 0-1024
@@ -1743,39 +1681,6 @@ void loop() {
                 ledUpdatePeriodMs = SparkleDecay(100, 150, 150, 2, 0);
                 break;
 
-
-
-
-//            //
-//            // Time Of Flight programs commented out for Bike Sabers where there isn't a ToF Sensor
-//            //
-//             case 25: // ToFWipe
-//                // variable update rate based on state of the program
-//                ledUpdatePeriodMs = 10;
-//                ToFWipe(100,255,200, range);
-//                break;
-//            case 26: // ToFColor
-//                // variable update rate based on state of the program
-//                ledUpdatePeriodMs = 10;
-//                ToFColor(range);
-//                break;
-//            case 27: // Fire! variables: int Cooling, int Sparking, int SpeedDelay
-//                ledUpdatePeriodMs = 15;
-//                Fire((range & 255),200);
-//                break;
-
-//            //
-//            // These programs cause lockups. 
-//            //
-// 
-//            case 10: // meteorRainbom variables: colorSeed,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
-//                ledUpdatePeriodMs = 1 * ledUpdateScaler;
-//                meteorRainbow(currentProgramPrioity, 15, 70, true);
-//                break;
-//            case 16: // meteor variables: red,  green,  blue,  meteorSize,  meteorTrailDecay, boolean meteorRandomDecay
-//                ledUpdatePeriodMs = 1 * ledUpdateScaler;
-//                meteorRain(100,255,200, 10, 70, true);
-//                break;
 
         }
     }
